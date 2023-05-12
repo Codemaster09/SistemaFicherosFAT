@@ -4,9 +4,11 @@ El siguiente programa escrito en Java se trata de la simulación de un sistema d
 
 **Distribución de trabajo inicial**
 
-Inés y Javier -> Cluster y ParteArchivo
-Samuel y David -> Directorio y EntradaDir
-Juan y Daniel -> Sistema de Ficheros y Entrada FAT
+_Inés y Javier_ -> Cluster y ParteArchivo
+
+_Samuel y David_ -> Directorio y EntradaDir
+
+_Juan y Daniel_ -> Sistema de Ficheros y Entrada FAT
 
 **Metodología de trabajo**
 
