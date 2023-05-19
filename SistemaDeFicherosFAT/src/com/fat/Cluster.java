@@ -4,4 +4,3 @@ public class Cluster {
 	String nombre;
 	int num;
 }
-//siuuuuuu
