@@ -1,6 +1,7 @@
 package com.fat;
 
 public class SistemaDeFicheros {
+<<<<<<< HEAD
 	//CREATE
 	public void crear(boolean esArchivo) {
 		
@@ -21,4 +22,7 @@ public class SistemaDeFicheros {
 		
 	}	
 
+=======
+	
+>>>>>>> masterTest
 }
