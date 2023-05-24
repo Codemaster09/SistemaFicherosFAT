@@ -19,6 +19,6 @@ public class SistemaDeFicheros {
 	//COPY
 	public void copiar(boolean esArchivo) {
 		
-	}	
+	}
 
 }
