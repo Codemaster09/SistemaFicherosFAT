@@ -1,9 +1,6 @@
 package com.fat;
 
 public class EntradaFAT {
-<<<<<<< HEAD
-	
-=======
 	boolean disponible;
 	Cluster siguiente;
 	boolean esFinal;
@@ -26,5 +23,5 @@ public class EntradaFAT {
 	public void cambiarSiEsFinal(boolean esFinal) {
 		
 	}
->>>>>>> 0d921292ecae9c7eca464352e949cae04bf8151f
+
 }
