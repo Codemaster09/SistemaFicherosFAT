@@ -1,14 +1,17 @@
 package com.fat;
 
 public class EntradaFAT {
-	boolean disponible;
-	int siguienteCluster;
-	boolean esFinal;
+	private int id;
+	private boolean disponible;
+	private int siguienteEntrada;
+	private boolean esFinal;
+	private static int cont=0;
 	
 	public EntradaFAT() {
 		super();
 		this.disponible=true;
-		this.esFinal=true;
+		this.id=cont;
+		cont++;
 	}
 	
 	public void cambiarDisponibilidad() {
@@ -19,14 +22,30 @@ public class EntradaFAT {
 		}
 	}
 
-	public void cambiarSiguienteCluster(int indexCluster) {
+	public void cambiarSiguienteCluster(int indexEntrada) {
 		if(disponible) {
-			this.siguienteCluster=indexCluster;
+			this.siguienteEntrada=indexEntrada;
 		}
 	}
 	
 	public void cambiarSiEsFinal(boolean esFinal) {
 		this.esFinal=esFinal;
+	}
+
+	public boolean getDisponible() {
+		return disponible;
+	}
+	
+	public int getSiguienteEntrada() {
+		return siguienteEntrada;
+	}
+
+	public boolean getEsFinal() {
+		return esFinal;
+	}
+
+	public int getID() {
+		return id;
 	}
 
 }
