@@ -3,8 +3,8 @@ package com.fat;
 public class ParteArchivo extends Cluster {
 	    private String nombreArchivo;
 	    
-	    public ParteArchivo(String nombreArchivo) {
-	        super();
+	    public ParteArchivo(String nombreArchivo, int size) {
+	        super(size);
 	        this.nombreArchivo = nombreArchivo;
 	    }
 	    
