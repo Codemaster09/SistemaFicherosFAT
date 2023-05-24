@@ -27,4 +27,5 @@ public class EntradaFAT {
 	public void cambiarSiEsFinal(boolean esFinal) {
 		this.esFinal=esFinal;
 	}
+
 }

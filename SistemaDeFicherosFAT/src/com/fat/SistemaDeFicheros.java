@@ -20,4 +20,5 @@ public class SistemaDeFicheros {
 	public void copiar(boolean esArchivo) {
 		
 	}	
+
 }
