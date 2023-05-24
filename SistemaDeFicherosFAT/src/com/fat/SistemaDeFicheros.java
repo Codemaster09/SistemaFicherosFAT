@@ -8,8 +8,6 @@ public class SistemaDeFicheros {
 	private static final int ES_WINDOWS = 1;
 	
 	int tipoDeSistemaDeFicheros;
-	int numeroClusters;
-	int sizeClusters;
 	
 	ArrayList<Cluster> clustersSistemaDeFicheros;
 	ArrayList<EntradaFAT> entradasSistemaDeFicheros;
@@ -21,16 +19,16 @@ public class SistemaDeFicheros {
 	
 	public SistemaDeFicheros(int tipoDeSistemaDeFicheros, int numeroClusters, int sizeClusters) {
 		this.tipoDeSistemaDeFicheros = tipoDeSistemaDeFicheros;
-		this.numeroClusters = numeroClusters;
-		this.sizeClusters = sizeClusters;
+		Cluster.size=sizeClusters;
 		
 		this.clustersSistemaDeFicheros = new ArrayList<Cluster>();
 		this.entradasSistemaDeFicheros = new ArrayList<EntradaFAT>();
+		this.clustersSistemaDeFicheros.add(new Directorio()); //Add Root (Index=0)
 		
-		for(int cluster=0; cluster<numeroClusters; cluster++) {
-			clustersSistemaDeFicheros.add(new Cluster);
+		//Inicializamos la lista de entradas a FAT
+		for(int i=0;i<numeroClusters;i++) {
+			this.entradasSistemaDeFicheros.add(new EntradaFAT());
 		}
-		
 	}
 	
 	//CREATE
