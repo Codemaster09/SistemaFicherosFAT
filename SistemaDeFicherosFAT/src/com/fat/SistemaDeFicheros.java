@@ -4,9 +4,16 @@ import java.util.ArrayList;
 
 public class SistemaDeFicheros {
 	
+	private static final int ES_MAC = 0;
+	private static final int ES_WINDOWS = 1;
 	int numeroClusters;
 	
 	ArrayList<Cluster> clustersSistemaDeFicheros = new ArrayList<Cluster>();
+
+	//LANZAMIENTO SISTEMA FICHEROS FAT
+	public static void main(String[] args) {
+		
+	}
 	
 	//CREATE
 	public static void crear(boolean esArchivo) {
@@ -27,15 +34,11 @@ public class SistemaDeFicheros {
 	public static void copiar(boolean esArchivo) {
 		
 	}
-
-	//LANZAMIENTO SISTEMA FICHEROS FAT
-	public static void main(String[] args) {
-		
-	}
 	
 	// MOSTRAR MENU
 	public void mostrarMenu() {
 		
 	}
+	
 	
 }
