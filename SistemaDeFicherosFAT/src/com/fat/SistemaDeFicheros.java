@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class SistemaDeFicheros {
 	
 	private static final int ES_MAC = 0;
-	private static final int ES_WINDOWS = 0;
+	private static final int ES_WINDOWS = 1;
 	int numeroClusters;
 	
 	ArrayList<Cluster> clustersSistemaDeFicheros = new ArrayList<Cluster>();
