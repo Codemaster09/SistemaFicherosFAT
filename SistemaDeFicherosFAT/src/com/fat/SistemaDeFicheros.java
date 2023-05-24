@@ -1,6 +1,12 @@
 package com.fat;
 
+import java.util.ArrayList;
+
 public class SistemaDeFicheros {
+	
+	int numeroClusters;
+	
+	ArrayList<Cluster> clustersSistemaDeFicheros = new ArrayList<Cluster>();
 	
 	//CREATE
 	public static void crear(boolean esArchivo) {
