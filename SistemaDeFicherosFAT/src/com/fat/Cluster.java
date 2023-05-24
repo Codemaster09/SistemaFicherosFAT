@@ -5,14 +5,16 @@ import java.util.Arrays;
 public class Cluster {
     private boolean ocupado;
     private byte[] datos;
-    public static final int TAMANO_CLUSTER = 4096; // Este es el tamaño del cluster en bytes 
-    //como no sabia que valor poner he puesto un static para que sea para todos igual
-    public Cluster() {
-        
+    private int size; // Lo hemos cambiado para que el usuario pueda elegir
+    // el tamaño del cluster
+    
+    public Cluster(int size) {
     	this.ocupado = false;
-        datos = new byte[TAMANO_CLUSTER];
+    	this.size = size;
+        datos = new byte[size];
     }
     
+    // Retornar y setear si está ocupado o no
     public boolean estaOcupado() {
         return ocupado;
     }
@@ -25,11 +27,20 @@ public class Cluster {
         ocupado = false;
     }
     
+    // Retornar o setear los datos que contiene
     public byte[] getDatos() {
         return datos;
     }
     
     public void setDatos(byte[] nuevosDatos) {
     	  datos = Arrays.copyOf(nuevosDatos, nuevosDatos.length);
+    }
+    
+    public int getSize() {
+    	return size;
+    }
+    
+    public void changeSize(int newSize) {
+    	this.size = newSize;
     }
 }
