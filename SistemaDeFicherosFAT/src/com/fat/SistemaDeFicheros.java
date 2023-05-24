@@ -21,4 +21,8 @@ public class SistemaDeFicheros {
 		
 	}
 
+	//LANZAMIENTO SISTEMA FICHEROS FAT
+	public static void main(String[] args) {
+		
+	}
 }
