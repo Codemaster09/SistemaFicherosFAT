@@ -1,5 +1,7 @@
 package com.fat;
 
+import java.util.Arrays;
+
 public class Cluster {
     private boolean ocupado;
     private byte[] datos;
@@ -28,6 +30,6 @@ public class Cluster {
     }
     
     public void setDatos(byte[] nuevosDatos) {
-        datos = nuevosDatos;
+    	  datos = Arrays.copyOf(nuevosDatos, nuevosDatos.length);
     }
 }
