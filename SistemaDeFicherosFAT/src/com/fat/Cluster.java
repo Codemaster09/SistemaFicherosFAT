@@ -5,15 +5,12 @@ import java.util.Arrays;
 public class Cluster {
     private boolean ocupado;
     private byte[] datos;
-    private int id;
-    private static int cont=0;
+    private int idEntrada;
     static int size; // Se elige el tamaño de cada cluster
     
     public Cluster() {
     	this.ocupado = false;
         datos = new byte[size];
-        this.id=cont;
-        cont++;
     }
     
     // Retornar y setear si está ocupado o no
@@ -42,7 +39,11 @@ public class Cluster {
     	Cluster.size = newSize;
     }
     
+    public void setID(int idEntrada) {
+    	this.idEntrada=idEntrada;
+    }
+    
     public int getID() {
-    	return this.id;
+    	return this.idEntrada;
     }
 }
