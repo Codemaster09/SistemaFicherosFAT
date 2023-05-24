@@ -54,7 +54,7 @@ public class SistemaDeFicheros {
 	}
 	
 	// MOSTRAR MENU
-	public void mostrarMenu() {
+	public void mostrarOpcionesDeMenu() {
 		
 	}
 	
