@@ -32,9 +32,11 @@ public class SistemaDeFicheros {
 	}
 	
 	//CREATE
-	public static void crearArchivo(boolean esArchivo) {
+	public static void crearArchivo(String nombre, boolean esArchivo) {
 		
 	}
+	
+	
 	
 	//MOVE
 	public static void mover(boolean esArchivo) {
