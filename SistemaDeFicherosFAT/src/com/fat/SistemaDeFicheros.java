@@ -119,6 +119,7 @@ public class SistemaDeFicheros {
 			@Override
 			public void run() {
 				crearYMostrarGUI();
+				// Esto es un comentario
 			}
 		});
 	}
