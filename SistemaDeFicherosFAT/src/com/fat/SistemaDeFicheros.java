@@ -32,7 +32,7 @@ public class SistemaDeFicheros {
 	}
 	
 	//CREATE
-	public static void crear(boolean esArchivo) {
+	public static void crearArchivo(boolean esArchivo) {
 		
 	}
 	
