@@ -39,24 +39,47 @@ public class SistemaDeFicheros {
 	
 	
 	//MOVE
-	public static void mover(boolean esArchivo) {
+	public static void mover(String nombre, boolean esArchivo) {
 		
+		// Case: mover un archivo
+		if(esArchivo) {
+			
+		} 
+		// Case: mover directorio
+		else {
+			
+		}
 	}
 	
 	//REMOVE
-	public static void borrar(boolean esArchivo) {
+	public static void borrar(String nombre, boolean esArchivo) {
 		
+		// Case: borrar archivo
+		if(esArchivo) {
+			
+		}
+		// Case: borrar directorio
+		else {
+			
+		}
 	}
 	
 	//COPY
-	public static void copiar(boolean esArchivo) {
+	public static void copiar(String nombre, Directorio directorioDeDestino, boolean esArchivo) {
 		
+		// Case: copiar un archivo a un directorio
+		if(esArchivo) {
+			
+		} 
+		// Case: copiar un directorio a otro directorio
+		else {
+			
+		}
 	}
 	
 	// MOSTRAR MENU
 	public void mostrarOpcionesDeMenu() {
 		
 	}
-	
 	
 }
