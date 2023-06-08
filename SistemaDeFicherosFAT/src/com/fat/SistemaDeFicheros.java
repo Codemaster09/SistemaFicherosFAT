@@ -107,7 +107,7 @@ public class SistemaDeFicheros {
 		
 		Scanner input = new Scanner(System.in);
 		
-		System.out.println(ConsoleColours.TEXT_BLUE + "SISTEMA DE FICHEROS FAT" + ConsoleColours.TEXT_RESET);
+		System.out.println(ConsoleColours.TEXT_BRIGHT_GREEN + "SISTEMA DE FICHEROS FAT" + ConsoleColours.TEXT_RESET);
 		System.out.println();
 		
 		while(opcionElegida != SALIR_PROGRAMA && 
@@ -116,14 +116,14 @@ public class SistemaDeFicheros {
 			System.out.println(ConsoleColours.TEXT_BG_GREEN + "¡Elige una opción!" + ConsoleColours.TEXT_RESET + 
 						newLine + newLine +
 					   "Mostrar sistema de ficheros (0)" + newLine +
-					   "Crear nuevo archivo (1)" + newLine + 
-					   "Crear nuevo directorio (2)" + newLine +
-					   "Copiar archivo (3)" + newLine +
-					   "Copiar directorio (4)" + newLine + 
-					   "Mover archivo (5)" + newLine +
-					   "Mover directorio (6)" + newLine +
-					   "Borrar archivo (7)" + newLine +
-					   "Borrar directorio (8)" + newLine +
+					   ConsoleColours.TEXT_CYAN + "Crear nuevo archivo (1)" + newLine + 
+					   "Crear nuevo directorio (2)" + ConsoleColours.TEXT_RESET + newLine +
+					   ConsoleColours.TEXT_YELLOW + "Copiar archivo (3)" + newLine +
+					   "Copiar directorio (4)" + ConsoleColours.TEXT_RESET + newLine + 
+					   ConsoleColours.TEXT_PURPLE + "Mover archivo (5)" + newLine +
+					   "Mover directorio (6)" + ConsoleColours.TEXT_RESET + newLine +
+					   ConsoleColours.TEXT_RED + "Borrar archivo (7)" + newLine +
+					   "Borrar directorio (8)" + ConsoleColours.TEXT_RESET + newLine +
 					   "Salir del programa (9)" + 
 					   newLine + newLine +
 					   "Opción: ");
