@@ -5,7 +5,7 @@ public class EntradaFAT {
 	private boolean disponible;
 	private int siguienteEntrada;
 	private boolean esFinal;
-	private static int cont=1;
+	private static int cont=0;
 	
 	public EntradaFAT() {
 		super();
@@ -14,15 +14,14 @@ public class EntradaFAT {
 		cont++;
 	}
 	
-	public void cambiarDisponibilidad() {
-		
-		if(this.disponible) {
-			this.disponible=false;
-		}else {
-			this.disponible=true;
-		}
+	public void disponibilidadAFalse() {
+		this.disponible=false;
 	}
 
+	public void disponibilidadATrue() {
+		this.disponible=true;
+	}
+	
 	public void cambiarSiguienteCluster(int indexEntrada) {
 		if(disponible) {
 			this.siguienteEntrada=indexEntrada;

@@ -6,6 +6,7 @@ public class ParteArchivo extends Cluster {
 	    public ParteArchivo(String nombreArchivo) {
 	        super();
 	        this.nombreArchivo = nombreArchivo;
+	        super.setDatos(this.nombreArchivo.getBytes());
 	    }
 	    
 	    public String getNombreArchivo() {

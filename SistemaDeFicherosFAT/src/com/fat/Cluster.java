@@ -3,14 +3,17 @@ package com.fat;
 import java.util.Arrays;
 
 public class Cluster {
+    static int size; // Se elige el tamaño de cada cluster
     private boolean ocupado;
     private byte[] datos;
     private int idEntrada;
-    static int size; // Se elige el tamaño de cada cluster
+    private static int cont=0;
     
     public Cluster() {
     	this.ocupado = false;
         datos = new byte[size];
+        this.idEntrada=cont;
+        cont++;
     }
     
     // Retornar y setear si está ocupado o no
