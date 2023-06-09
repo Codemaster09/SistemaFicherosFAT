@@ -2,10 +2,8 @@ package com.fat;
 
 import java.awt.Color;
 import java.util.ArrayList;
-<<<<<<< HEAD
 import java.util.Iterator;
 import java.util.List;
-=======
 import java.util.Scanner;
 
 import javax.swing.JFrame;
@@ -14,15 +12,9 @@ import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import com.fat.utils.ConsoleColours;
->>>>>>> 70f3a6814bb738060117f3794d09e02800bc5776
 
 public class SistemaDeFicheros {
-	Cluster[] clustersSF;
-	EntradaFAT[] entradasSF;
 	
-<<<<<<< HEAD
-	public SistemaDeFicheros(int numeroClusters,int sizeClusters) {
-=======
 	private static final boolean ES_WINDOWS = Boolean.TRUE; 
 	// Si no se cree un sistema de ficheros con directorio raíz '/'
 	
@@ -43,6 +35,11 @@ public class SistemaDeFicheros {
 	
 	ArrayList<Cluster> clustersSistemaDeFicheros;
 	ArrayList<EntradaFAT> entradasSistemaDeFicheros;
+	
+
+	public SistemaDeFicheros(int numeroClusters,int sizeClusters) {
+		
+	}
 
 	// LANZAMIENTO SISTEMA FICHEROS FAT
 	public static void main(String[] args) {
@@ -50,16 +47,20 @@ public class SistemaDeFicheros {
 	}
 	
 	public SistemaDeFicheros(boolean tipoDeSistemaDeFicheros, int numeroClusters, int sizeClusters) {
+		
 		this.tipoDeSistemaDeFicheros = tipoDeSistemaDeFicheros;
+		
 		Cluster.size=sizeClusters;
-		this.clustersSF = new Cluster[numeroClusters+1];
-		this.entradasSF = new EntradaFAT[numeroClusters];
 		
+		this.clustersSistemaDeFicheros = new ArrayList<Cluster>(numeroClusters);
+		this.entradasSistemaDeFicheros = new ArrayList<EntradaFAT>(numeroClusters);
 		
-		//Inicializamos la lista de entradas a FAT
-		this.clustersSF[0]=new Directorio(); //Directorio ROOT
-		for(int i=1;i<clustersSF.length;i++) {
-			this.entradasSF[i]=new EntradaFAT();
+		//Inicializamos el directorio raíz
+		this.clustersSistemaDeFicheros.add(new Directorio()); //Directorio ROOT
+		
+		// Inicializamos las entradas a la fat
+		for(int cluster = 1; cluster < numeroClusters; cluster++) {
+			entradasSistemaDeFicheros.add(new EntradaFAT());
 		}
 	}
 	
@@ -71,13 +72,13 @@ public class SistemaDeFicheros {
 		if(!clusterInic.isEmpty()) {
 			Directorio dirAMeterDir;
 			//Se hace en la raiz
-			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSF[0],nombreDirEntrada);
+			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombreDirEntrada);
 
 			//Ya tenemos el directorio donde vamos a meter nuestro directorio
 			if(dirAMeterDir!=null) {
 				int i=0;
 				for(Integer cluster:clusterInic) {
-					clustersSF[cluster]=new ParteArchivo(info[i]);
+					clustersSistemaDeFicheros[cluster]=new ParteArchivo(info[i]);
 					dirAMeterDir.add(new EntradaDir(nombreArchivo,true,clusterInic.get(0)));
 					i++;
 				}
@@ -92,11 +93,11 @@ public class SistemaDeFicheros {
 		if(!clusterInic.isEmpty()) {
 			Directorio dirAMeterDir;
 			//Se hace en la raiz
-			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSF[0],nombreDirEntrada);
+			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombreDirEntrada);
 
 			//Ya tenemos el directorio donde vamos a meter nuestro directorio
 			if(dirAMeterDir!=null) {
-				clustersSF[clusterInic.get(0)]=new Directorio();
+				clustersSistemaDeFicheros[clusterInic.get(0)]=new Directorio();
 				dirAMeterDir.add(new EntradaDir(nombreDir,true,clusterInic.get(0)));
 			}
 		}
@@ -107,10 +108,10 @@ public class SistemaDeFicheros {
 			if(e.esDirectorio) {
 				if(e.nombre.equals(nombreDirEntrada)) {
 					//Está el directorio que buscamos, cojo su cluster de inicio
-					return (Directorio)clustersSF[e.clusterInicio];					
+					return (Directorio)clustersSistemaDeFicheros[e.clusterInicio];					
 				}else {
 					//Me meto a mirar lo de dentro del deirectorio que me encuentro a ver si está
-					return buscarDirectorioPorNombre((Directorio)clustersSF[e.clusterInicio],nombreDirEntrada);
+					return buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[e.clusterInicio],nombreDirEntrada);
 				}
 			}
 		}
@@ -191,16 +192,34 @@ public class SistemaDeFicheros {
 		}
 	}
 	
+	public void mostrarEstadoFat() {
+		
+		
+	}
+	
 	// MOSTRAR MENÚ POR CONSOLA
 	
 	public static void crearYMostrarConsola(SistemaDeFicheros sistemaDeFicherosFat) {
 		
+		// Inicializamos opción del usuario y el scanner para leer la opción elegida por el usuario
 		int opcionElegida = 0;
-		
 		Scanner input = new Scanner(System.in);
 		
+		// Mostrar título inicial
 		System.out.println(ConsoleColours.TEXT_BRIGHT_GREEN + "SISTEMA DE FICHEROS FAT" + ConsoleColours.TEXT_RESET);
 		System.out.println();
+		
+		switch (obtenerOpcionUsuario(input, opcionElegida)) {
+		case MOSTRAR_SISTEMA_FICHEROS: {
+			sistemaDeFicherosFat.
+		}
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + key);
+		}
+	}
+	
+	// MOSTRADOR DE OPCIONES
+	public static int obtenerOpcionUsuario(Scanner input, int opcionElegida) {
 		
 		while(opcionElegida != SALIR_PROGRAMA && 
 				opcionElegida >= MOSTRAR_SISTEMA_FICHEROS && 
@@ -221,7 +240,7 @@ public class SistemaDeFicheros {
 					   "Opción: ");
 			opcionElegida = input.nextInt();
 		}
-		
+		return opcionElegida;
 	}
 	
 	// EJECUTAR PROGRAMA POR CONSOLA
@@ -233,44 +252,44 @@ public class SistemaDeFicheros {
 	}
 	
 	// MOSTRAR MENÚ POR GUI
-	public static void crearYMostrarGUI() {
-		
-		// Construir la ventana
-		JFrame ventanaPrincipal = new JFrame("Sistema de Ficheros - FAT");
-		ventanaPrincipal.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ventanaPrincipal.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		
-		// Construir los paneles de la ventana
-		
-		// Panel metadatos
-		JPanel panelMetadatos = new JPanel();
-		panelMetadatos.setBackground(Color.blue);
-		
-		// Panel datos
-		JPanel panelDatos = new JPanel();
-		panelDatos.setBackground(Color.red);
-		
-		// Panel principal
-		JSplitPane panelDividido = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelMetadatos, panelDatos);
-		panelDividido.setResizeWeight(0.5);
-		ventanaPrincipal.add(panelDividido);
-		
-		// Mostrar ventana
-		ventanaPrincipal.pack();
-		ventanaPrincipal.setVisible(true);
-	}
-	
-	// EJECUTAR PROGRAMA POR GUI
-	public static void ejecutarProgramaGUI() {
-		
-		SwingUtilities.invokeLater(new Runnable() {
-			
-			@Override
-			public void run() {
-				crearYMostrarGUI();
-				// Esto es un comentario
-			}
-		});
-	}
+//	public static void crearYMostrarGUI() {
+//		
+//		// Construir la ventana
+//		JFrame ventanaPrincipal = new JFrame("Sistema de Ficheros - FAT");
+//		ventanaPrincipal.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		ventanaPrincipal.setExtendedState(JFrame.MAXIMIZED_BOTH);
+//		
+//		// Construir los paneles de la ventana
+//		
+//		// Panel metadatos
+//		JPanel panelMetadatos = new JPanel();
+//		panelMetadatos.setBackground(Color.blue);
+//		
+//		// Panel datos
+//		JPanel panelDatos = new JPanel();
+//		panelDatos.setBackground(Color.red);
+//		
+//		// Panel principal
+//		JSplitPane panelDividido = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelMetadatos, panelDatos);
+//		panelDividido.setResizeWeight(0.5);
+//		ventanaPrincipal.add(panelDividido);
+//		
+//		// Mostrar ventana
+//		ventanaPrincipal.pack();
+//		ventanaPrincipal.setVisible(true);
+//	}
+//	
+//	// EJECUTAR PROGRAMA POR GUI
+//	public static void ejecutarProgramaGUI() {
+//		
+//		SwingUtilities.invokeLater(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				crearYMostrarGUI();
+//				// Esto es un comentario
+//			}
+//		});
+//	}
 	
 }
