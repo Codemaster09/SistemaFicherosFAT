@@ -2,10 +2,8 @@ package com.fat;
 
 import java.awt.Color;
 import java.util.ArrayList;
-<<<<<<< HEAD
 import java.util.Iterator;
 import java.util.List;
-=======
 import java.util.Scanner;
 
 import javax.swing.JFrame;
@@ -14,15 +12,10 @@ import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import com.fat.utils.ConsoleColours;
->>>>>>> 70f3a6814bb738060117f3794d09e02800bc5776
 
 public class SistemaDeFicheros {
 	Cluster[] clustersSF;
 	EntradaFAT[] entradasSF;
-	
-<<<<<<< HEAD
-	public SistemaDeFicheros(int numeroClusters,int sizeClusters) {
-=======
 	private static final boolean ES_WINDOWS = Boolean.TRUE; 
 	// Si no se cree un sistema de ficheros con directorio raíz '/'
 	
@@ -64,7 +57,7 @@ public class SistemaDeFicheros {
 	}
 	
 	//CREATE
-	public static void crearArchivo(String nombreArchivo,String[]info,int size) {
+	public void crearArchivo(String nombreDirEntrada,String nombreArchivo,String[]info,int size) {
 		
 		//Para el caso del directorio solo ocupa un Cluster
 		List<Integer>clusterInic=entradasDisponibles(size);
@@ -78,7 +71,7 @@ public class SistemaDeFicheros {
 				int i=0;
 				for(Integer cluster:clusterInic) {
 					clustersSF[cluster]=new ParteArchivo(info[i]);
-					dirAMeterDir.add(new EntradaDir(nombreArchivo,true,clusterInic.get(0)));
+					dirAMeterDir.addEntrada(new EntradaDir(nombreArchivo,true,clusterInic.get(0)));
 					i++;
 				}
 			}
@@ -97,20 +90,21 @@ public class SistemaDeFicheros {
 			//Ya tenemos el directorio donde vamos a meter nuestro directorio
 			if(dirAMeterDir!=null) {
 				clustersSF[clusterInic.get(0)]=new Directorio();
-				dirAMeterDir.add(new EntradaDir(nombreDir,true,clusterInic.get(0)));
+				dirAMeterDir.addEntrada(new EntradaDir(nombreDir,true,clusterInic.get(0)));
 			}
 		}
 	}
 	
 	private Directorio buscarDirectorioPorNombre(Directorio dir,String nombreDirEntrada) {	
-		for(EntradaFAT e:dir.entradas) {
-			if(e.esDirectorio) {
-				if(e.nombre.equals(nombreDirEntrada)) {
+		for(EntradaDir e:dir.getEntradas()) {
+			if(e.getIsDir()) {
+				if(e.getNombre().equals(nombreDirEntrada)) {
 					//Está el directorio que buscamos, cojo su cluster de inicio
-					return (Directorio)clustersSF[e.clusterInicio];					
+					return (Directorio)clustersSF[e.getClusterInicio()];					
 				}else {
 					//Me meto a mirar lo de dentro del deirectorio que me encuentro a ver si está
-					return buscarDirectorioPorNombre((Directorio)clustersSF[e.clusterInicio],nombreDirEntrada);
+					return buscarDirectorioPorNombre
+							((Directorio)clustersSF[e.getClusterInicio()],nombreDirEntrada);
 				}
 			}
 		}

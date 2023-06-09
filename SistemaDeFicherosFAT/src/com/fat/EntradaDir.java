@@ -2,13 +2,13 @@
 package com.fat;
 public class EntradaDir {
     private String nombre;
-    private String tipo;
-    private int idEntrada; 
+    private boolean esDirectorio;
+    private int clusterInicio;
 
-    public EntradaDir(String nombre, String tipo, int idEntrada) {
+    public EntradaDir(String nombre,boolean esDirectorio, int clusterInicio) {
         this.nombre = nombre;
-        this.tipo = tipo;
-        this.idEntrada = idEntrada;
+        this.esDirectorio =esDirectorio;
+        this.clusterInicio = clusterInicio;
     }
 
     // Getters y Setters
@@ -20,19 +20,19 @@ public class EntradaDir {
         this.nombre = nombre;
     }
 
-    public String getTipo() {
-        return tipo;
+    public boolean getIsDir() {
+        return esDirectorio;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setIsDir(boolean esDirectorio) {
+        this.esDirectorio = esDirectorio;
     }
 
-    public int getIdEntrada() {
-        return idEntrada;
+    public int getClusterInicio() {
+        return clusterInicio;
     }
 
-    public void setIdEntrada(int idEntrada) {
-        this.idEntrada = idEntrada;
+    public void setClusterInicio(int clusterInicio) {
+        this.clusterInicio = clusterInicio;
     }
 }
