@@ -32,7 +32,7 @@ public class Cluster {
     }
     
     public void setDatos(byte[] nuevosDatos) {
-    	  datos = Arrays.copyOf(nuevosDatos, nuevosDatos.length);
+    	  datos = Arrays.copyOf(nuevosDatos,nuevosDatos.length);
     }
      
     public void changeSize(int newSize) {

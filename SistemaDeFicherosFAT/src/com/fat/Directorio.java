@@ -1,10 +1,8 @@
 package com.fat;
 
-public class Directorio extends Cluster {
+import java.util.ArrayList;
+import java.util.List;
 
-	public Directorio() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+public class Directorio extends Cluster {
 
 }

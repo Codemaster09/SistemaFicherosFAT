@@ -5,7 +5,7 @@ public class EntradaFAT {
 	private boolean disponible;
 	private int siguienteEntrada;
 	private boolean esFinal;
-	private static int cont=0;
+	private static int cont=1;
 	
 	public EntradaFAT() {
 		super();
@@ -15,6 +15,7 @@ public class EntradaFAT {
 	}
 	
 	public void cambiarDisponibilidad() {
+		
 		if(this.disponible) {
 			this.disponible=false;
 		}else {
