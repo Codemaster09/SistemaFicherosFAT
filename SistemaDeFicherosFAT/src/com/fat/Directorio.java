@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Directorio extends Cluster{
+	
     private List<EntradaDir> entradas = new ArrayList<>();
 
-    public Directorio() {
+    public Directorio(String nombreDirectorio) {
         super();
+        super.setNombre(nombreDirectorio);
     }
 
     public void addEntrada(EntradaDir entrada) {
@@ -36,4 +38,17 @@ public class Directorio extends Cluster{
             super.ocupar(); // Al agregar una entrada, el cluster se ocupa
         }
     }
+
+	public String getNombreDirectorio() {
+		return super.getNombre();
+	}
+
+	public void setNombreDirectorio(String nombreDirectorio) {
+		super.setNombre(nombreDirectorio);
+	}
+    
+	@Override
+	public String toString() {
+		return super.toString().concat(super.getNombre());
+	}
 }
