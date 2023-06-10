@@ -186,9 +186,15 @@ public class SistemaDeFicheros {
 	}
 	
 	// COPIAR ARCHIVO
-	
+	public void copiarArchivo(String pathArchivo, Directorio directorioDestino) {
+		
+	}
 	
 	// COPIAR DIRECTORIO
+	
+	public void copiarDirectorio(Directorio directorioOrigen, Directorio directorioDestino) {
+		
+	}
 	
 	//MOVE
 	public void mover(String nombre, boolean esArchivo) {
@@ -205,8 +211,15 @@ public class SistemaDeFicheros {
 	
 	// MOVER ARCHIVO 
 	
+	public void moverArchivo(String pathArchivo, Directorio directorioDestino) {
+		
+	}
 	
 	// MOVER DIRECTORIO
+	
+	public void moverDirectorio(Directorio directorioOrigen, Directorio directorioDestino) {
+		
+	}
 	
 	
 	//REMOVE
