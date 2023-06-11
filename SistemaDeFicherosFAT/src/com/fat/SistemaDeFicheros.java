@@ -641,10 +641,19 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	
 	public List<ParteArchivo> buscarArchivo(String pathArchivo) {
 		
+		List<ParteArchivo> partesArchivo = new ArrayList<ParteArchivo>();
+		
 		// Buscar en los clusters
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(cluster instanceof ParteArchivo) {
+				ParteArchivo parteArchivo = (ParteArchivo) cluster;
+				if(parteArchivo.getNombre().equals(pathArchivo)) {
+					partesArchivo.add(parteArchivo);
+				}
+			}
+		}
 		
-		
-		return null;
+		return partesArchivo;
 	}
 	
 	// BUSCAR DIRECTORIO
