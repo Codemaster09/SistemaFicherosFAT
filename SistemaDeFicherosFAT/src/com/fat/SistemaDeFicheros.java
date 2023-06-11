@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.imageio.plugins.tiff.ExifParentTIFFTagSet;
+
 import com.fat.utils.ConsoleColours;
 
 public class SistemaDeFicheros {
@@ -128,14 +130,21 @@ public class SistemaDeFicheros {
 		int numClustersNecesitadosParaArchivo = 0;
 		numClustersNecesitadosParaArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		
+		// Obtener índices de la entrada de la fat disponibles
+		int[] indicesDeEntradaFatDisponibles = obtenerIndicesEntradaFatLibres(); 
+		
 		// Obtener nombres de directorios
 		String[] nombresDirectorios = obtenerNombresDeDirectorios();
+		
+		// Obtener partes de archivo que necesitamos introducir en los clusters
+		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo);
 		
 		// Case: espacio disponible y directorio existe
 		if(numClustersNecesitadosParaArchivo <= this.obtenerNumeroEntradasFatLibres()) {
 			if(directorioExiste(pathDirectorioDestino, nombresDirectorios)) {
 				
 				// Modificar entradas FAT (METADATOS)
+				
 				
 				// Modificar clusters (DATOS)
 				
@@ -159,7 +168,7 @@ public class SistemaDeFicheros {
 		return numeroEntradasFatLibres;
 	}
 	
-	public int[] obtenerIndicesEntradasFatLibres() {
+	public int[] obtenerIndicesEntradaFatLibres() {
 		
 		int [] indicesEntradasFatLibres = new int[this.obtenerNumeroEntradasFatLibres()];
 		int numEntrada = 0;
@@ -215,19 +224,30 @@ public class SistemaDeFicheros {
 	}
 	
 	public int obtenerNumeroDePartesDeArchivo(int sizeOfArchivo) {
-		return sizeOfArchivo / SIZE_OF_CLUSTER;
+		return (sizeOfArchivo / SIZE_OF_CLUSTER) + 1;
 	}
 	
-	public ParteArchivo[] crearPartesDeArchivo(String nombreDeArchivo, int numeroDePartesDeArchivo) {
+	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo) {
 		
-		ParteArchivo[] partesDeArchivos = new ParteArchivo[numeroDePartesDeArchivo];
+		int numeroDePartesDeArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
+		List<ParteArchivo> partesDeArchivos = new ArrayList<ParteArchivo>();
 		
-		// Modificar los metadatos
-		
-		
-		// Modificar los datos
+		// Crear partes de archivo con su tamaño y nombre correspondientes
+		for(int numArchivo = 0; numArchivo < numeroDePartesDeArchivo; numArchivo++) {
+			// Si es el último, establecer como tamaño el resto entre el tamaño de un cluster
+			if(numArchivo == numeroDePartesDeArchivo-1) {
+				int restoDeBytesArchivo = sizeOfArchivo % SIZE_OF_CLUSTER;
+				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, restoDeBytesArchivo));
+			} else {
+				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, SIZE_OF_CLUSTER));
+			}
+		}
 		
 		return partesDeArchivos;
+	}
+	
+	public boolean crearDirectorio(String pathDirectorioOrigen, String nombreNuevoDirectorio) {
+		return false;
 	}
 	
 //	//CREATE
@@ -355,108 +375,197 @@ public class SistemaDeFicheros {
 //	}
 	
 	//XXX COPIAR
-	public void copiar(String nombre, Directorio directorioDestino, boolean esArchivo) {
+	
+	public void mostrarDialogoParaCopiarArchivo(Scanner input) {
 		
-		// Case: copiar un archivo a un directorio
-		if(esArchivo) {
-			copiarArchivo(nombre, directorioDestino);
-		} 
-		// Case: copiar un directorio a otro directorio
+		String pathArchivoACopiar = null;
+		String pathDirectorioDestino = null;
+		
+		System.out.println("Introduzca el path completo del archivo a copiar: ");
+		pathArchivoACopiar = input.nextLine();
+		
+		System.out.println("Introduca el path completo del directorio donde quiere guardar la copia: ");
+		pathDirectorioDestino = input.nextLine();
+		
+		// Case: archivo copiado con éxito
+		if(copiarArchivo(pathArchivoACopiar, pathDirectorioDestino)) {
+			System.out.println("¡Archivo copiado con éxito!");
+		}
+		// Case: archivo origen o directorio destino no encontrados
 		else {
-			
-			// Buscamos el directorio en el que se encuentra el archivo actual
-			for(Cluster cluster: clustersSistemaDeFicheros) {
-				
-				// Mirar si está ocupado
-				if(cluster.estaOcupado() && cluster instanceof Directorio) {
-					
-					Directorio directorioAuxiliar = (Directorio) cluster;
-					List<EntradaDir> entradasDirectorioAuxiliar = directorioAuxiliar.getEntradas();
-					
-					// Mirar si el nombre se encuentra en alguna de las entradas al dir
-					for(EntradaDir entrada: entradasDirectorioAuxiliar) {
-						if(entrada.getNombre().equals(nombre)) {
-							//directorioOrigen = 
-						}
-					}
-				}	
-			}
-			//copiarDirectorio(directorioOrigen, directorioDestino);
+			System.err.println("Archivo a copiar o directorio destino no encontrados.");
+		}
+		
+	}
+	
+	public void mostrarDialogoParaCopiarDirectorio(Scanner input) {
+		
+		String pathDirectorioACopiar = null;
+		String pathDirectorioDestino = null;
+		
+		System.out.println("Introduzca el path completo del directorio a copiar: ");
+		pathDirectorioACopiar = input.nextLine();
+		
+		System.out.println("Introduzca el path completo del directorio donde quiere guardar la copia: ");
+		pathDirectorioDestino = input.nextLine();
+		
+		// Case: directorio copiado con éxito 
+		if(copiarDirectorio(pathDirectorioACopiar, pathDirectorioDestino)) {
+			System.out.println("¡Directorio copiado con éxito!");
+		}
+		// Case: direcorio origen o destino no encontrados
+		else {
+			System.err.println("Directorio origen o destino no encontrados.");
 		}
 	}
 	
 	// COPIAR ARCHIVO
-	public void copiarArchivo(String pathArchivo, Directorio directorioDestino) {
+	public boolean copiarArchivo(String pathArchivo, String pathDirectorioDestino) {
 		
+		return false;
 	}
 	
 	// COPIAR DIRECTORIO
 	
-	public void copiarDirectorio(Directorio directorioOrigen, Directorio directorioDestino) {
+	public boolean copiarDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
 		
+		return false;
 	}
 	
 	//XXX MOVER
-	public void mover(String nombre, boolean esArchivo) {
+	public void mostrarDialogoParaMoverArchivo(Scanner input) {
+		String pathArchivoAMover = null;
+		String pathDirectorioDestino = null;
 		
-		// Case: mover un archivo
-		if(esArchivo) {
-			
-		} 
-		// Case: mover directorio
+		System.out.println("Introduzca el path completo del archivo a mover: ");
+		pathArchivoAMover = input.nextLine();
+		
+		System.out.println("Introduzca el path completo del directorio a donde quiere mover el archivo: ");
+		pathDirectorioDestino = input.nextLine();
+		
+		// Case: archivo movido con éxito
+		if(moverArchivo(pathArchivoAMover, pathDirectorioDestino)) {
+			System.out.println("¡El archivo ha sido movido con éxito!");
+		}
+		// Case: archivo no encontrado
 		else {
-			
+			System.err.println("El archivo no ha sido encontrado.");
+		}
+	}
+	
+	public void mostrarDialogoParaMoverDirectorio(Scanner input) {
+		
+		String pathDirectorioAMover = null;
+		String pathDirectorioDestino = null;
+		
+		System.out.println("Introduzca el path completo del directorio a mover: ");
+		pathDirectorioAMover = input.nextLine();
+		
+		System.out.println("Introduzca el path completo del directorio donde quiere mover el archivo: ");
+		pathDirectorioDestino = input.nextLine();
+		
+		// Case: directorio movido con éxito
+		if(moverDirectorio(pathDirectorioAMover, pathDirectorioDestino)) {
+			System.out.println("¡El directorio ha sido movido con éxito!");
+		}
+		// Case: directorio no encontrado
+		else {
+			System.err.println("El directorio no se ha encontrado.");
 		}
 	}
 	
 	// MOVER ARCHIVO 
 	
-	public void moverArchivo(String pathArchivo, Directorio directorioDestino) {
+	public boolean moverArchivo(String pathArchivo, String pathDirectorioDestino) {
 		
+		return false;
 	}
 	
 	// MOVER DIRECTORIO
 	
-	public void moverDirectorio(Directorio directorioOrigen, Directorio directorioDestino) {
+	public boolean moverDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
 		
+		return false;
 	}
 	
 	
 	//XXX BORRAR
 	
+	// BORRAR ARCHIVO
+	public void mostrarDialogoParaBorrarArchivo(Scanner input) {
+		String pathArchivoABorrar;
+		System.out.println("Introduzca el path completo del archivo a borrar: ");
+		pathArchivoABorrar = input.nextLine();
+		
+		// Case: borrar archivo con éxito
+		if(borrarArchivo(pathArchivoABorrar)) {
+			System.out.println("¡Archivo borrado con éxito!");
+		}
+		// Case: archivo no encontrado
+		else {
+			System.err.println("Archivo a borrar no encontrado.");
+		}
+	}
+	
+	// BORRAR DIRECTORIO
+	public void mostrarDialogoParaBorrarDirectorio(Scanner input) {
+		String pathDirectorioABorrar;
+		System.out.println("Introduzca el path completo del directorio a borrar: ");
+		pathDirectorioABorrar = input.nextLine();
+		
+		// Case: borrar directorio con éxito
+		if(borraDirectorio(pathDirectorioABorrar)) {
+			System.out.println("¡Directorio borrado con éxito!");
+		} 
+		// Case: directorio no encontrado
+		else {
+			System.err.println("Directorio a borrar no encontrado.");
+		}
+	} 
+	
+	
 	/**
 	 * Método usado para borrar un archivo dado su nombre
 	 * @param nombre path completo de dónde se encuentra el archivo
 	 */
-	public void borrarArchivo(String nombre) {
+	public boolean borrarArchivo(String pathArchivoABorrar) {
 		
+		
+		return false;
 	}
 	
-	public void borrarDirectorio(String nombre) {
-		Directorio dirRemove = buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombre);
+	public boolean borraDirectorio(String pathDirectorioABorrar) {
 		
-		if(dirRemove != null) {
-			for(EntradaDir entrada:dirRemove.getEntradas())
-				entradasSistemaDeFicheros[entrada.getClusterInicio()].disponibilidadATrue(); //Sus entradas disponibles
-			entradasSistemaDeFicheros[dirRemove.getID()].disponibilidadATrue(); //El directorio lo eliminas
-			System.out.println("Directorio eliminado");
-			
-		}else {
-			System.out.println("Directorio no encontrado");
-		}
+		
+		return false;
 	}
+	
+//	public void borrarDirectorio(String nombre) {
+//		Directorio dirRemove = buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombre);
+//		
+//		if(dirRemove != null) {
+//			for(EntradaDir entrada:dirRemove.getEntradas())
+//				entradasSistemaDeFicheros[entrada.getClusterInicio()].disponibilidadATrue(); //Sus entradas disponibles
+//			entradasSistemaDeFicheros[dirRemove.getID()].disponibilidadATrue(); //El directorio lo eliminas
+//			System.out.println("Directorio eliminado");
+//			
+//		}else {
+//			System.out.println("Directorio no encontrado");
+//		}
+//	}
 	
 	// BUSCAR ARCHIVO
 	
 	public static ParteArchivo buscarArchivo(String nombreArchivo) {
 		
 		// Buscar en los clusters
+		return null;
 	}
 	
 	// BUSCAR DIRECTORIO
 	
 	public static Directorio buscarDirectorio(String nombreDirectorio) {
-		
+		return null;
 	}
 	
 	public static void mostrarTituloInicial() {
@@ -505,25 +614,27 @@ public class SistemaDeFicheros {
 	// GESTOR DE FUNCIONES DE LA FAT
 	private static void gestionarFunciones(SistemaDeFicheros sistemaDeFicherosFat, int opcionElegida) {
 		
+		Scanner input = new Scanner(System.in);
+		
 		switch (opcionElegida) {
 		case MOSTRAR_ESTADO_FAT: 
 			sistemaDeFicherosFat.mostrarEstadoFat();
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case CREAR_ARCHIVO:
-			sistemaDeFicherosFat.mostrarDialogoParaCrearArchivo();;
+			sistemaDeFicherosFat.mostrarDialogoParaCrearArchivo(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case CREAR_DIRECTORIO:
-			sistemaDeFicherosFat.crearDirectorio(newLine, newLine);
+			sistemaDeFicherosFat.mostrarDialogoParaCrearDirectorio(input);;
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case COPIAR_ARCHIVO:
-			sistemaDeFicherosFat.copiar(newLine, null, false);
+			sistemaDeFicherosFat.mostrarDialogoParaCopiarArchivo(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case COPIAR_DIRECTORIO:
-			sistemaDeFicherosFat.copiar(newLine, null, false);
+			sistemaDeFicherosFat.mostrarDialogoParaCopiarDirectorio(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 		case MOVER_ARCHIVO:
 			sistemaDeFicherosFat.mover(newLine, false);
@@ -538,7 +649,7 @@ public class SistemaDeFicheros {
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case BORRAR_DIRECTORIO:
-			sistemaDeFicherosFat.borrarDirectorio(newLine);
+			//sistemaDeFicherosFat.borrarDirectorio(newLine);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case SALIR_DE_PROGRAMA:
