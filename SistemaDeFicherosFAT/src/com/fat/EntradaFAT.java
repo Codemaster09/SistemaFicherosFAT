@@ -1,6 +1,6 @@
 package com.fat;
 
-public class EntradaFAT {
+public class EntradaFAT implements Comparable{
 	private int id;
 	private boolean disponible;
 	private int siguienteEntrada;
@@ -56,6 +56,14 @@ public class EntradaFAT {
 												Integer.toString(siguienteEntrada), 
 												Boolean.toString(esFinal));
 	}
+
+	@Override
+	public int compareTo(Object o) {
+		EntradaFAT ef = (EntradaFAT) o;
+		return this.id-ef.id;
+	}
+	
+	
 
 //	@Override
 //	public String toString() {

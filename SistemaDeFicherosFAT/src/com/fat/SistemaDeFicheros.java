@@ -2,10 +2,9 @@ package com.fat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
-
-import javax.imageio.plugins.tiff.ExifParentTIFFTagSet;
 
 import com.fat.utils.ConsoleColours;
 
@@ -124,17 +123,18 @@ public class SistemaDeFicheros {
 	}
 	
 	
-	public boolean crearArchivo(String nombreArchivo,int sizeOfArchivo, String pathDirectorioDestino) {
+	public boolean crearArchivo(String nombreArchivo, int sizeOfArchivo, String pathDirectorioDestino) {
 		
 		// Obtener número de clusters necesitados para guardar el archivo
 		int numClustersNecesitadosParaArchivo = 0;
 		numClustersNecesitadosParaArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		
 		// Obtener índices de la entrada de la fat disponibles
-		int[] indicesDeEntradaFatDisponibles = obtenerIndicesEntradaFatLibres(); 
+		List<EntradaFAT> entradasFatOcupadas = obtenerListaEntradasFatOcupadas();
+		List<EntradaFAT> entradasFatLibres = obtenerListaEntradasFatLibres(); 
 		
 		// Obtener nombres de directorios
-		String[] nombresDirectorios = obtenerNombresDeDirectorios();
+		List<Directorio> nombresDirectorios = obtenerListaDeDirectorios();
 		
 		// Obtener partes de archivo que necesitamos introducir en los clusters
 		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo);
@@ -144,7 +144,14 @@ public class SistemaDeFicheros {
 			if(directorioExiste(pathDirectorioDestino, nombresDirectorios)) {
 				
 				// Modificar entradas FAT (METADATOS)
-				
+				Iterator<ParteArchivo> itEntradaFat = partesDeArchivoNuevas.iterator();
+				int numEntrada = 0;
+				while(itEntradaFat.hasNext()) {
+					ParteArchivo nuevaParteArchivo = itEntradaFat.next();
+					// Gestionar entradas fat
+					entradasFatLibres.get(numEntrada).disponibilidadAFalse();
+					numEntrada++;
+				}
 				
 				// Modificar clusters (DATOS)
 				
@@ -168,19 +175,30 @@ public class SistemaDeFicheros {
 		return numeroEntradasFatLibres;
 	}
 	
-	public int[] obtenerIndicesEntradaFatLibres() {
+	public List<EntradaFAT> obtenerListaEntradasFatLibres() {
 		
-		int [] indicesEntradasFatLibres = new int[this.obtenerNumeroEntradasFatLibres()];
-		int numEntrada = 0;
+		List<EntradaFAT> entradasFatDisponibles = new ArrayList<EntradaFAT>();
 		
 		for(EntradaFAT entrada: this.entradasSistemaDeFicheros) {
 			if(entrada.getDisponible()) {
-				indicesEntradasFatLibres[numEntrada] = entrada.getID();
-				numEntrada++;
+				entradasFatDisponibles.add(entrada);
 			}
 		}
 		
-		return indicesEntradasFatLibres;
+		return entradasFatDisponibles;
+	}
+	
+public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
+		
+		List<EntradaFAT> entradasFatDisponibles = new ArrayList<EntradaFAT>();
+		
+		for(EntradaFAT entrada: this.entradasSistemaDeFicheros) {
+			if(!entrada.getDisponible()) {
+				entradasFatDisponibles.add(entrada);
+			}
+		}
+		
+		return entradasFatDisponibles;
 	}
 	
 	public int obtenerNumeroDeDirectorios() {
@@ -197,34 +215,26 @@ public class SistemaDeFicheros {
 		return numeroDeDirectorios;
 	}
 	
-	public String[] obtenerNombresDeDirectorios() {
+	public List<Directorio> obtenerListaDeDirectorios() {
 		
-		String[] nombresDeDirectorios = new String[this.obtenerNumeroDeDirectorios()];
-		int numeroDeDirectorio = 0;
+		List<Directorio> directorios = new ArrayList<Directorio>();
 		
 		for(Cluster cluster: this.clustersSistemaDeFicheros) {
 			if(cluster instanceof Directorio) {
-				Directorio directorio = (Directorio) cluster;
-				nombresDeDirectorios[numeroDeDirectorio] = directorio.getNombre();
-				numeroDeDirectorio++;
+				Directorio directorioEncontrado = (Directorio) cluster;
+				directorios.add(directorioEncontrado);
 			}
 		}
-		
-		return nombresDeDirectorios;
+				
+		return directorios;
 	}
 	
-	public boolean directorioExiste(String nombreDirectorio, String[] directorios) {
-		
-		List<String> listOfDirectories = Arrays.asList(directorios);
-		
-		if(listOfDirectories.contains(nombreDirectorio)) {
-			return true;
-		}
-		return false;
+	public boolean directorioExiste(String nombreDirectorio, List<Directorio> directorios) {
+		return directorios.contains(nombreDirectorio);
 	}
 	
 	public int obtenerNumeroDePartesDeArchivo(int sizeOfArchivo) {
-		return (sizeOfArchivo / SIZE_OF_CLUSTER) + 1;
+		return (sizeOfArchivo / SIZE_OF_CLUSTER + 1);
 	}
 	
 	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo) {
@@ -637,19 +647,19 @@ public class SistemaDeFicheros {
 			sistemaDeFicherosFat.mostrarDialogoParaCopiarDirectorio(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 		case MOVER_ARCHIVO:
-			sistemaDeFicherosFat.mover(newLine, false);
+			sistemaDeFicherosFat.mostrarDialogoParaMoverArchivo(input);;
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case MOVER_DIRECTORIO:
-			sistemaDeFicherosFat.mover(newLine, false);
+			sistemaDeFicherosFat.mostrarDialogoParaMoverDirectorio(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case BORRAR_ARCHIVO:
-			sistemaDeFicherosFat.borrarArchivo(newLine);
+			sistemaDeFicherosFat.mostrarDialogoParaBorrarArchivo(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case BORRAR_DIRECTORIO:
-			//sistemaDeFicherosFat.borrarDirectorio(newLine);
+			sistemaDeFicherosFat.mostrarDialogoParaBorrarDirectorio(input);;
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case SALIR_DE_PROGRAMA:
