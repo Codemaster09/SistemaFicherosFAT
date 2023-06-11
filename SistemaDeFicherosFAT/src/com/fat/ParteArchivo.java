@@ -9,7 +9,6 @@ public class ParteArchivo extends Cluster {
         super();
         this.nombreArchivo = nombreArchivo;
         this.sizeInCluster = sizeInCluster;
-        super.setDatos(this.nombreArchivo.getBytes());
     }
     
     public String getNombreArchivo() {
@@ -22,6 +21,6 @@ public class ParteArchivo extends Cluster {
     
     @Override
     public String toString() {
-    	return this.nombreArchivo + sizeInCluster + "/" + super.size;
+    	return this.nombreArchivo + ": " + sizeInCluster + "/" + super.size + "bytes";
     }
 }

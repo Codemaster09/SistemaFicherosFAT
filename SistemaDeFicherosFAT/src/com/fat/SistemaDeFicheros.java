@@ -1,6 +1,7 @@
 package com.fat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -32,12 +33,14 @@ public class SistemaDeFicheros {
 	
 	public SistemaDeFicheros(int numeroClusters, int sizeClusters) {	
 		
-		// Establecemos el tamaño en bytes de información que podrá 
-		// almacenar cada cluster
+		// Establecemos el tamaño en bytes de información ficticia
+		// que podrá almacenar cada cluster
 		Cluster.size = sizeClusters;
 		
-		this.clustersSistemaDeFicheros = new Cluster[numeroClusters + 1];
+		// Inicializamos las entradas de la FAT (metadatos)
 		this.entradasSistemaDeFicheros = new EntradaFAT[numeroClusters];
+		// Inicializamos los clusters de la FAT (datos)
+		this.clustersSistemaDeFicheros = new Cluster[numeroClusters + 1];
 		
 		//Inicializamos el directorio raíz
 		this.clustersSistemaDeFicheros[0] = new Directorio("C:\\"); //Directorio ROOT
@@ -48,7 +51,7 @@ public class SistemaDeFicheros {
 		}
 	}
 	
-	// MOSTRAR ESTADO ACTUAL DE LA FAT
+	//XXX MOSTRAR ESTADO ACTUAL DE LA FAT
 	
 	public void mostrarEstadoFat() {
 		
@@ -59,6 +62,7 @@ public class SistemaDeFicheros {
 						  "Disponible", 
 						  "Siguiente", 
 						  "Final" + ConsoleColours.TEXT_RESET);
+		
 		for(EntradaFAT entradaFat: this.entradasSistemaDeFicheros) {
 			entradaFat.mostrar();
 			System.out.println();
@@ -72,131 +76,285 @@ public class SistemaDeFicheros {
 		}
 	}
 	
-	//CREATE
-	public void crearArchivo(String nombreDirEntrada, String nombreArchivo, String info) {
-		
-		//Para el caso del archivo ocupará en función de lo que se le pase por entrada
-		int size;
-		if(info.length()%Cluster.size>0)
-			size=1+info.length()/Cluster.size;
-		else
-			size=info.length()/Cluster.size;;
-			
-		String[]infoParts=infoToParts(info,size); //Dividimos el string en partes
-		List<Integer>clusterInic=entradasDisponibles(size); //Seleccionamos los clusters necesarios
-		
-		if(!clusterInic.isEmpty()) {
-			Directorio dirAMeterDir;
-			//Se hace en la raiz
-			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombreDirEntrada);
-
-			//Ya tenemos el directorio donde vamos a meter nuestro directorio
-			if(dirAMeterDir!=null) {
-				int i=0;
-				for(Integer cluster:clusterInic) {
-					dirAMeterDir.addEntrada(new EntradaDir(nombreArchivo,true,cluster));
-					//clustersSistemaDeFicheros[cluster]=new ParteArchivo(infoParts[i]);
-					clustersSistemaDeFicheros[cluster].setID(cluster);
-					i++;
-				}
-				System.out.println("Archivo creado con éxito");
-			}else {
-				System.out.println("Error al crear archivo: "
-						+ "No se ha encontrado el nombre del directorio en donde se va a introducir");
-			}
-		}	
-	}
+	//XXX CREAR
 	
-	public void crearDirectorio(String nombreDirEntrada,String nombreDir) {
+	public void mostrarDialogoParaCrearArchivo(Scanner input) {
 		
-		//Para el caso del directorio solo ocupa un Cluster
-		List<Integer>clusterInic=entradasDisponibles(1);
-		if(!clusterInic.isEmpty()) {
-			Directorio dirAMeterDir;
-			//Buscará en C:\ el directorio para meter la info
-			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombreDirEntrada);
-			//Ya tenemos el directorio donde vamos a meter nuestro directorio
-			if(dirAMeterDir!=null) {
-				dirAMeterDir.addEntrada(new EntradaDir(nombreDir,true,clusterInic.get(0)));
-				clustersSistemaDeFicheros[clusterInic.get(0)]=dirAMeterDir;
-				clustersSistemaDeFicheros[clusterInic.get(0)].setID(clusterInic.get(0));
-				System.out.println("Directorio creado con éxito");
-			}else {
-				System.out.println("Error al crear directorio: "
-						+ "No se ha encontrado el nombre del directorio en donde se va a introducir");
-			}
+		String pathDirectorioDestino = null;
+		String nombreArchivo = null;
+		int sizeOfArchivo = 0;
+		
+		System.out.println("Introduzca el path del directorio donde quiere crear el archivo: ");
+		pathDirectorioDestino = input.nextLine();
+		
+		System.out.println("Introduzca el nombre del nuevo archivo: ");
+		nombreArchivo = input.nextLine();
+		
+		System.out.println("Introduzcale tamaño en bytes del nuevo archivo: ");
+		sizeOfArchivo = input.nextInt();
+		
+		if(crearArchivo(nombreArchivo, sizeOfArchivo, pathDirectorioDestino)){
+			System.out.println("¡Archivo creado con éxito!");
+		} else {
+			System.err.println("El directorio introducido no es válido o no existe suficiente espacio.");
 		}
 	}
 	
-	private Directorio buscarDirectorioPorNombre(Directorio dir,String nombreDirEntrada) {	
-		if(nombreDirEntrada.equals("C:\\")) {
-			return (Directorio)clustersSistemaDeFicheros[0];
-		}else { //Si no es el root, buscamos dentro de él
-			for(EntradaDir e:dir.getEntradas()) {
-				if(e.getIsDir()) {
-					if(e.getNombre().equals(nombreDirEntrada)) {
-						//Está el directorio que buscamos, cojo su cluster de inicio
-						return (Directorio)clustersSistemaDeFicheros[e.getClusterInicio()];					
-					}
-				}
-			}
-		}
-		//Si no hay directorio encontrado
-		return null;
-	}
-	
-	//Si existen los suficientes clusters libres, les cambia la disponibilidad
-	private List<Integer> entradasDisponibles(int numEntradas) {	
-		//Buscamos el número de entradas disponibles en nuestro sistema de Metadatos
-		List<Integer>disponibles=new ArrayList<Integer>();
+	public void mostrarDialogoParaCrearDirectorio(Scanner input) {
 		
-		for(int i=0;i<entradasSistemaDeFicheros.length;i++) {
-			if(entradasSistemaDeFicheros[i].getDisponible()) {
-				//Metemos en una lista los ID de cada entrada para identificarlos
-				disponibles.add(entradasSistemaDeFicheros[i].getID());
+		String pathDirectorioOrigen = null;
+		String pathNuevoDirectorio = null;
+		
+		System.out.println("Introduzca el path completo del directorio donde quiere crear un nuevo directorio: ");
+		pathDirectorioOrigen = input.nextLine();
+		
+		System.out.println("Introduzca el nombre del nuevo directorio: ");
+		pathNuevoDirectorio = input.nextLine();
+		
+		// Case: directorio creado con éxito
+		if(crearDirectorio(pathDirectorioOrigen, pathNuevoDirectorio)) {
+			System.out.println("¡Directorio creado con éxito!");
+		} 
+		// Case: directorio origen no existe
+		else {
+			System.err.println("El directorio origen no existe.");
+		}
+	}
+	
+	
+	public boolean crearArchivo(String nombreArchivo,int sizeOfArchivo, String pathDirectorioDestino) {
+		
+		// Obtener número de clusters necesitados para guardar el archivo
+		int numClustersNecesitadosParaArchivo = 0;
+		numClustersNecesitadosParaArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
+		
+		// Obtener nombres de directorios
+		String[] nombresDirectorios = obtenerNombresDeDirectorios();
+		
+		// Case: espacio disponible y directorio existe
+		if(numClustersNecesitadosParaArchivo <= this.obtenerNumeroEntradasFatLibres()) {
+			if(directorioExiste(pathDirectorioDestino, nombresDirectorios)) {
+				
+				// Modificar entradas FAT (METADATOS)
+				
+				// Modificar clusters (DATOS)
+				
+				return true;
 			}
-			if(disponibles.size()==numEntradas)
-				break; //Sal cuando tengas los clusters exactos que necesitas (así no coge más de la cuenta)
+		}
+		// Case: archivo demasiado grande o directorio no existe 
+		return false;
+	}
+	
+	public int obtenerNumeroEntradasFatLibres() {
+		
+		int numeroEntradasFatLibres = 0;
+		
+		for(EntradaFAT entrada: this.entradasSistemaDeFicheros) {
+			if(entrada.getDisponible()) {
+				numeroEntradasFatLibres++;
+			}
 		}
 		
-		if(disponibles.size()>=numEntradas) {
-			//Con la condición de arriba solo entrarán numEntradas clusters
-			//Como existen dichos clusters, cambiamos la disponibilidad de estos
-			for(int i=0;i<numEntradas;i++) {
-				entradasSistemaDeFicheros[disponibles.get(i)].disponibilidadAFalse();
-				if(i==numEntradas-1) { //Fin a true (último necesitado)
-					entradasSistemaDeFicheros[disponibles.get(i)].cambiarSiEsFinal(true);
-				}else { //Cambio el siguiente y el fin a falso
-					entradasSistemaDeFicheros[disponibles.get(i)].cambiarSiguienteCluster(disponibles.get(i+1));
-					entradasSistemaDeFicheros[disponibles.get(i)].cambiarSiEsFinal(false);
-				}
-			}
-		}else {
-			//Retornamos una lista vacía si no hay suficientes clusters (esto lo usaremos como condición posterior)
-			disponibles.clear();
-			System.err.println("No existen clusters suficientes para crear el archivo\n");
-		}
-		return disponibles;
+		return numeroEntradasFatLibres;
 	}
 	
-	//Un string a array de string dividido en partes
-	private String[] infoToParts(String s,int size) {
-		String []parts=new String[size];
-		int cont=0;
-		for(int i=0;i<size;i++) {
-			for(int j=cont;j<Cluster.size;j++) {
-				if(j<s.length()) {
-					parts[i]+=s.charAt(j);
-				}else {
-					break;
-				}
+	public int[] obtenerIndicesEntradasFatLibres() {
+		
+		int [] indicesEntradasFatLibres = new int[this.obtenerNumeroEntradasFatLibres()];
+		int numEntrada = 0;
+		
+		for(EntradaFAT entrada: this.entradasSistemaDeFicheros) {
+			if(entrada.getDisponible()) {
+				indicesEntradasFatLibres[numEntrada] = entrada.getID();
+				numEntrada++;
 			}
-			cont+=Cluster.size;
 		}
-		return parts;
+		
+		return indicesEntradasFatLibres;
 	}
 	
-	//COPY
+	public int obtenerNumeroDeDirectorios() {
+		
+		int numeroDeDirectorios = 0;
+		
+		// Buscamos por todos los clusters
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(cluster instanceof Directorio) {
+				numeroDeDirectorios++;
+			}
+		}
+		
+		return numeroDeDirectorios;
+	}
+	
+	public String[] obtenerNombresDeDirectorios() {
+		
+		String[] nombresDeDirectorios = new String[this.obtenerNumeroDeDirectorios()];
+		int numeroDeDirectorio = 0;
+		
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(cluster instanceof Directorio) {
+				Directorio directorio = (Directorio) cluster;
+				nombresDeDirectorios[numeroDeDirectorio] = directorio.getNombre();
+				numeroDeDirectorio++;
+			}
+		}
+		
+		return nombresDeDirectorios;
+	}
+	
+	public boolean directorioExiste(String nombreDirectorio, String[] directorios) {
+		
+		List<String> listOfDirectories = Arrays.asList(directorios);
+		
+		if(listOfDirectories.contains(nombreDirectorio)) {
+			return true;
+		}
+		return false;
+	}
+	
+	public int obtenerNumeroDePartesDeArchivo(int sizeOfArchivo) {
+		return sizeOfArchivo / SIZE_OF_CLUSTER;
+	}
+	
+	public ParteArchivo[] crearPartesDeArchivo(String nombreDeArchivo, int numeroDePartesDeArchivo) {
+		
+		ParteArchivo[] partesDeArchivos = new ParteArchivo[numeroDePartesDeArchivo];
+		
+		// Modificar los metadatos
+		
+		
+		// Modificar los datos
+		
+		return partesDeArchivos;
+	}
+	
+//	//CREATE
+//	public void crearArchivo(String nombreDirEntrada, String nombreArchivo, String info) {
+//		
+//		//Para el caso del archivo ocupará en función de lo que se le pase por entrada
+//		int size;
+//		if(info.length()%Cluster.size>0)
+//			size=1+info.length()/Cluster.size;
+//		else
+//			size=info.length()/Cluster.size;;
+//			
+//		String[]infoParts=infoToParts(info,size); //Dividimos el string en partes
+//		List<Integer>clusterInic=entradasDisponibles(size); //Seleccionamos los clusters necesarios
+//		
+//		if(!clusterInic.isEmpty()) {
+//			Directorio dirAMeterDir;
+//			//Se hace en la raiz
+//			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombreDirEntrada);
+//
+//			//Ya tenemos el directorio donde vamos a meter nuestro directorio
+//			if(dirAMeterDir!=null) {
+//				int i=0;
+//				for(Integer cluster:clusterInic) {
+//					dirAMeterDir.addEntrada(new EntradaDir(nombreArchivo,true,cluster));
+//					//clustersSistemaDeFicheros[cluster]=new ParteArchivo(infoParts[i]);
+//					clustersSistemaDeFicheros[cluster].setID(cluster);
+//					i++;
+//				}
+//				System.out.println("Archivo creado con éxito");
+//			}else {
+//				System.out.println("Error al crear archivo: "
+//						+ "No se ha encontrado el nombre del directorio en donde se va a introducir");
+//			}
+//		}	
+//	}
+//	
+//	public void crearDirectorio(String nombreDirEntrada,String nombreDir) {
+//		
+//		//Para el caso del directorio solo ocupa un Cluster
+//		List<Integer>clusterInic=entradasDisponibles(1);
+//		if(!clusterInic.isEmpty()) {
+//			Directorio dirAMeterDir;
+//			//Buscará en C:\ el directorio para meter la info
+//			dirAMeterDir=buscarDirectorioPorNombre((Directorio)clustersSistemaDeFicheros[0],nombreDirEntrada);
+//			//Ya tenemos el directorio donde vamos a meter nuestro directorio
+//			if(dirAMeterDir!=null) {
+//				dirAMeterDir.addEntrada(new EntradaDir(nombreDir,true,clusterInic.get(0)));
+//				clustersSistemaDeFicheros[clusterInic.get(0)]=dirAMeterDir;
+//				clustersSistemaDeFicheros[clusterInic.get(0)].setID(clusterInic.get(0));
+//				System.out.println("Directorio creado con éxito");
+//			}else {
+//				System.out.println("Error al crear directorio: "
+//						+ "No se ha encontrado el nombre del directorio en donde se va a introducir");
+//			}
+//		}
+//	}
+//	
+//	private Directorio buscarDirectorioPorNombre(Directorio dir,String nombreDirEntrada) {	
+//		if(nombreDirEntrada.equals("C:\\")) {
+//			return (Directorio)clustersSistemaDeFicheros[0];
+//		}else { //Si no es el root, buscamos dentro de él
+//			for(EntradaDir e:dir.getEntradas()) {
+//				if(e.getIsDir()) {
+//					if(e.getNombre().equals(nombreDirEntrada)) {
+//						//Está el directorio que buscamos, cojo su cluster de inicio
+//						return (Directorio)clustersSistemaDeFicheros[e.getClusterInicio()];					
+//					}
+//				}
+//			}
+//		}
+//		//Si no hay directorio encontrado
+//		return null;
+//	}
+//	
+//	//Si existen los suficientes clusters libres, les cambia la disponibilidad
+//	private List<Integer> entradasDisponibles(int numEntradas) {	
+//		//Buscamos el número de entradas disponibles en nuestro sistema de Metadatos
+//		List<Integer>disponibles=new ArrayList<Integer>();
+//		
+//		for(int i=0;i<entradasSistemaDeFicheros.length;i++) {
+//			if(entradasSistemaDeFicheros[i].getDisponible()) {
+//				//Metemos en una lista los ID de cada entrada para identificarlos
+//				disponibles.add(entradasSistemaDeFicheros[i].getID());
+//			}
+//			if(disponibles.size()==numEntradas)
+//				break; //Sal cuando tengas los clusters exactos que necesitas (así no coge más de la cuenta)
+//		}
+//		
+//		if(disponibles.size()>=numEntradas) {
+//			//Con la condición de arriba solo entrarán numEntradas clusters
+//			//Como existen dichos clusters, cambiamos la disponibilidad de estos
+//			for(int i=0;i<numEntradas;i++) {
+//				entradasSistemaDeFicheros[disponibles.get(i)].disponibilidadAFalse();
+//				if(i==numEntradas-1) { //Fin a true (último necesitado)
+//					entradasSistemaDeFicheros[disponibles.get(i)].cambiarSiEsFinal(true);
+//				}else { //Cambio el siguiente y el fin a falso
+//					entradasSistemaDeFicheros[disponibles.get(i)].cambiarSiguienteCluster(disponibles.get(i+1));
+//					entradasSistemaDeFicheros[disponibles.get(i)].cambiarSiEsFinal(false);
+//				}
+//			}
+//		}else {
+//			//Retornamos una lista vacía si no hay suficientes clusters (esto lo usaremos como condición posterior)
+//			disponibles.clear();
+//			System.err.println("No existen clusters suficientes para crear el archivo\n");
+//		}
+//		return disponibles;
+//	}
+//	
+//	//Un string a array de string dividido en partes
+//	private String[] infoToParts(String s,int size) {
+//		String []parts=new String[size];
+//		int cont=0;
+//		for(int i=0;i<size;i++) {
+//			for(int j=cont;j<Cluster.size;j++) {
+//				if(j<s.length()) {
+//					parts[i]+=s.charAt(j);
+//				}else {
+//					break;
+//				}
+//			}
+//			cont+=Cluster.size;
+//		}
+//		return parts;
+//	}
+	
+	//XXX COPIAR
 	public void copiar(String nombre, Directorio directorioDestino, boolean esArchivo) {
 		
 		// Case: copiar un archivo a un directorio
@@ -238,7 +396,7 @@ public class SistemaDeFicheros {
 		
 	}
 	
-	//MOVE
+	//XXX MOVER
 	public void mover(String nombre, boolean esArchivo) {
 		
 		// Case: mover un archivo
@@ -264,8 +422,12 @@ public class SistemaDeFicheros {
 	}
 	
 	
-	//REMOVE
+	//XXX BORRAR
 	
+	/**
+	 * Método usado para borrar un archivo dado su nombre
+	 * @param nombre path completo de dónde se encuentra el archivo
+	 */
 	public void borrarArchivo(String nombre) {
 		
 	}
@@ -284,23 +446,35 @@ public class SistemaDeFicheros {
 		}
 	}
 	
+	// BUSCAR ARCHIVO
 	
-	// MOSTRAR MENÚ POR CONSOLA
-	
-	public static void crearYMostrarConsola(SistemaDeFicheros sistemaDeFicherosFat) {
+	public static ParteArchivo buscarArchivo(String nombreArchivo) {
 		
-		// Inicializamos opción del usuario y el scanner para leer la opción elegida por el usuario
-		int opcionElegida = -1;
-		Scanner input = new Scanner(System.in);
+		// Buscar en los clusters
+	}
+	
+	// BUSCAR DIRECTORIO
+	
+	public static Directorio buscarDirectorio(String nombreDirectorio) {
+		
+	}
+	
+	public static void mostrarTituloInicial() {
 		
 		// Mostrar título inicial
 		System.out.println(ConsoleColours.TEXT_BRIGHT_GREEN + "SISTEMA DE FICHEROS FAT" + ConsoleColours.TEXT_RESET);
 		System.out.println();
 		
-		// Mostrar opciones y ejecutar lo solicitado por el usuario
-		mostrarOpciones();
-		opcionElegida = obtenerOpcionUsuario(input, opcionElegida);
-		gestionarFunciones(sistemaDeFicherosFat, opcionElegida);
+		// Mostrar información de importancia
+		System.out.println("El presente programa simula el funcionamiento de un sistema de ficheros FAT con 16 clusters de 1024 bytes de"
+						   + " tamaño cada uno.");
+		System.out.println();
+		
+		// Mostrar ayuda para el uso del programa
+		System.out.println("Para crear, copiar, mover y borrar un archivo/directorio deberá escrbir su path completo.");
+		System.out.println("Por ejemplo, para crear el archivo gataca.avi deberá escribir C:\\gataca.avi o para borrar el directorio "
+				           + "dir2 que se encuentra en el directorio dir1 deberá escribir C:\\dir1\\dir2.");
+		System.out.println();
 	}
 
 	// MOSTRADOR DE OPCIONES
@@ -337,7 +511,7 @@ public class SistemaDeFicheros {
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case CREAR_ARCHIVO:
-			sistemaDeFicherosFat.crearArchivo(newLine, newLine, newLine);
+			sistemaDeFicherosFat.mostrarDialogoParaCrearArchivo();;
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case CREAR_DIRECTORIO:
@@ -372,6 +546,23 @@ public class SistemaDeFicheros {
 		default:
 			break;
 		}	
+	}
+	
+	// MOSTRAR MENÚ POR CONSOLA
+	
+	public static void crearYMostrarConsola(SistemaDeFicheros sistemaDeFicherosFat) {
+		
+		// Inicializamos opción del usuario y el scanner para leer la opción elegida por el usuario
+		int opcionElegida = -1;
+		Scanner input = new Scanner(System.in);
+		
+		// Mostrar título inicial
+		mostrarTituloInicial();
+		
+		// Mostrar opciones y ejecutar lo solicitado por el usuario
+		mostrarOpciones();
+		opcionElegida = obtenerOpcionUsuario(input, opcionElegida);
+		gestionarFunciones(sistemaDeFicherosFat, opcionElegida);
 	}
 	
 //	// PRUEBA DE LOS CASOS POSIBLES
