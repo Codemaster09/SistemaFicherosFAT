@@ -6,27 +6,27 @@ public class Cluster {
 	
 	private String nombre;
     static int size; // Se elige el tamaño de cada cluster
-    private boolean ocupado;
+    private boolean disponible;
     private int idEntrada;
     private static int cont=0;
     
     public Cluster() {
-    	this.ocupado = false;
+    	this.disponible = true;
         this.idEntrada = cont;
         cont++;
     }
     
     // Retornar y setear si está ocupado o no
-    public boolean estaOcupado() {
-        return ocupado;
+    public boolean estaDisponible() {
+        return disponible;
     }
     
     public void ocupar() {
-        ocupado = true;
+        disponible = true;
     }
     
     public void liberar() {
-        ocupado = false;
+        disponible = false;
     }
      
     public void changeSize(int newSize) {

@@ -24,7 +24,7 @@ public class EntradaFAT implements Comparable{
 	}
 	
 	public void cambiarSiguienteCluster(int indexEntrada) {
-		if(disponible) {
+		if(!disponible) {
 			this.siguienteEntrada=indexEntrada;
 		}
 	}

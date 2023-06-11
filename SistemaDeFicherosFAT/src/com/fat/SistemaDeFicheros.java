@@ -26,11 +26,11 @@ public class SistemaDeFicheros {
 	
 	public static final String newLine = "\n";
 	
-	// Datos del sistema de ficheros
-	Cluster[] clustersSistemaDeFicheros;
-	
 	// Metadatos del sistema de ficheros
 	EntradaFAT[] entradasSistemaDeFicheros;
+	
+	// Datos del sistema de ficheros
+	Cluster[] clustersSistemaDeFicheros;
 	
 	public SistemaDeFicheros(int numeroClusters, int sizeClusters) {	
 		
@@ -45,11 +45,20 @@ public class SistemaDeFicheros {
 		
 		//Inicializamos el directorio raíz
 		this.clustersSistemaDeFicheros[0] = new Directorio("C:\\"); //Directorio ROOT
+		this.clustersSistemaDeFicheros[0].ocupar();
+		
+		// Inicializamos el resto de clusters
+		for(int cluster = 1; cluster < numeroClusters + 1; cluster++) {
+			clustersSistemaDeFicheros[cluster] = new Cluster();
+		}
 		
 		// Inicializamos las entradas a la fat
-		for(int i=0; i < numeroClusters; i++) {
-			entradasSistemaDeFicheros[i] = new EntradaFAT();
+		for(int entrada=0; entrada < numeroClusters; entrada++) {
+			entradasSistemaDeFicheros[entrada] = new EntradaFAT();
 		}
+		
+		// Añadimos datos para realizar pruebas
+		
 	}
 	
 	//XXX MOSTRAR ESTADO ACTUAL DE LA FAT
@@ -129,12 +138,16 @@ public class SistemaDeFicheros {
 		int numClustersNecesitadosParaArchivo = 0;
 		numClustersNecesitadosParaArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		
-		// Obtener índices de la entrada de la fat disponibles
+		// Obtener listas de entradas de la fat disponibles y ocupados
 		List<EntradaFAT> entradasFatOcupadas = obtenerListaEntradasFatOcupadas();
 		List<EntradaFAT> entradasFatLibres = obtenerListaEntradasFatLibres(); 
 		
 		// Obtener nombres de directorios
-		List<Directorio> nombresDirectorios = obtenerListaDeDirectorios();
+		String[] nombresDirectorios = obtenerNombresDeDirectorios();
+		
+		// Obtener clusters libres y ocupados
+		List<Cluster> clustersLibres = obtenerListaClustersLibres();
+		List<Cluster> clustersOcupados = obtenerListaClustersOcupados();
 		
 		// Obtener partes de archivo que necesitamos introducir en los clusters
 		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo);
@@ -144,16 +157,33 @@ public class SistemaDeFicheros {
 			if(directorioExiste(pathDirectorioDestino, nombresDirectorios)) {
 				
 				// Modificar entradas FAT (METADATOS)
-				Iterator<ParteArchivo> itEntradaFat = partesDeArchivoNuevas.iterator();
-				int numEntrada = 0;
-				while(itEntradaFat.hasNext()) {
-					ParteArchivo nuevaParteArchivo = itEntradaFat.next();
-					// Gestionar entradas fat
-					entradasFatLibres.get(numEntrada).disponibilidadAFalse();
-					numEntrada++;
+				for(int entrada = 0; entrada < numClustersNecesitadosParaArchivo; entrada++) {
+					// Cambiar a si es final
+					if(entrada == numClustersNecesitadosParaArchivo - 1) {
+						// Cambiar disponibilidad e indicar que es final
+						entradasFatLibres.get(entrada).disponibilidadAFalse();
+						entradasFatLibres.get(entrada).cambiarSiEsFinal(true);
+					} else {
+						// Cambiar disponiblidad e indicar siguiente cluster
+						entradasFatLibres.get(entrada).disponibilidadAFalse();
+						entradasFatLibres.get(entrada).cambiarSiguienteCluster(entradasFatLibres.get(entrada+1).getID());
+					}
 				}
 				
 				// Modificar clusters (DATOS)
+				
+				// Añadir archivo a las entradas dir
+				Directorio directorioParaArchivo = buscarDirectorio(pathDirectorioDestino);
+				directorioParaArchivo.addEntrada(new EntradaDir(nombreArchivo, false, clustersLibres.get(0).getID()));
+				
+				// Añadir partes de archivo a los clusters
+				
+				Iterator<Cluster> itClusters = clustersLibres.iterator();
+				
+				for(ParteArchivo archivo: partesDeArchivoNuevas) {
+					Cluster clusterUsado = itClusters.next();
+					clusterUsado = archivo;
+				}
 				
 				return true;
 			}
@@ -215,26 +245,69 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		return numeroDeDirectorios;
 	}
 	
-	public List<Directorio> obtenerListaDeDirectorios() {
+	public String[] obtenerNombresDeDirectorios() {
 		
-		List<Directorio> directorios = new ArrayList<Directorio>();
+		String[] directorios = new String[obtenerNumeroDeDirectorios()];
+		int numDirectorio = 0;
 		
 		for(Cluster cluster: this.clustersSistemaDeFicheros) {
 			if(cluster instanceof Directorio) {
 				Directorio directorioEncontrado = (Directorio) cluster;
-				directorios.add(directorioEncontrado);
+				directorios[numDirectorio] = directorioEncontrado.getNombre();
+				numDirectorio++;
 			}
 		}
 				
 		return directorios;
 	}
 	
-	public boolean directorioExiste(String nombreDirectorio, List<Directorio> directorios) {
-		return directorios.contains(nombreDirectorio);
+	public List<Directorio> obtenerListaDeDirectorios(){
+		
+		List<Directorio> listaDirectorios = new ArrayList<Directorio>();
+		
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(cluster instanceof Directorio) {
+				Directorio directorio = (Directorio) cluster;
+				listaDirectorios.add(directorio);
+			}
+		}
+		
+		return listaDirectorios;
+	}
+	
+	public boolean directorioExiste(String nombreDirectorio, String[] directorios) {
+		List<String> listaDirectorios = Arrays.asList(directorios);
+		return listaDirectorios.contains(nombreDirectorio);
 	}
 	
 	public int obtenerNumeroDePartesDeArchivo(int sizeOfArchivo) {
 		return (sizeOfArchivo / SIZE_OF_CLUSTER + 1);
+	}
+	
+	public List<Cluster> obtenerListaClustersLibres(){
+		
+		List<Cluster> clustersLibres = new ArrayList<Cluster>();
+		
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(cluster.estaDisponible()) {
+				clustersLibres.add(cluster);
+			}
+		}
+		
+		return clustersLibres;
+	}
+	
+	public List<Cluster> obtenerListaClustersOcupados(){
+		
+		List<Cluster> clustersOcupados = new ArrayList<Cluster>();
+		
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(!cluster.estaDisponible()) {
+				clustersOcupados.add(cluster);
+			}
+		}
+		
+		return clustersOcupados;
 	}
 	
 	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo) {
@@ -566,15 +639,27 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	
 	// BUSCAR ARCHIVO
 	
-	public static ParteArchivo buscarArchivo(String nombreArchivo) {
+	public List<ParteArchivo> buscarArchivo(String pathArchivo) {
 		
 		// Buscar en los clusters
+		
+		
 		return null;
 	}
 	
 	// BUSCAR DIRECTORIO
 	
-	public static Directorio buscarDirectorio(String nombreDirectorio) {
+	public Directorio buscarDirectorio(String pathDirectorio) {
+		
+		// Buscar en los clusters
+		List<Directorio> directorios = obtenerListaDeDirectorios();
+		
+		for(Directorio directorio: directorios) {
+			if(directorio.getNombre().equals(pathDirectorio)) {
+				return directorio;
+			}
+		}
+		
 		return null;
 	}
 	
