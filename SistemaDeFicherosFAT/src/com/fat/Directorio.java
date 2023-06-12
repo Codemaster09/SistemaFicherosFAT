@@ -10,7 +10,7 @@ public class Directorio extends Cluster{
 
     public Directorio(String nombreDirectorio) {
         super();
-        super.setNombre(nombreDirectorio);
+        super.setNombre(nombreDirectorio); 
     }
 
     public void addEntrada(EntradaDir entrada) {
@@ -46,9 +46,17 @@ public class Directorio extends Cluster{
 	public void setNombreDirectorio(String nombreDirectorio) {
 		super.setNombre(nombreDirectorio);
 	}
-    
-	@Override
-	public String toString() {
-		return super.toString().concat(super.getNombre());
+	
+	public void mostrarEntradas() {
+		for(EntradaDir entrada: this.entradas) {
+			entrada.mostrar();
+		}
 	}
+	
+	public void mostrar() {
+		System.out.println(super.toString() + SistemaDeFicheros.newLine + 
+				super.getNombre() + SistemaDeFicheros.newLine);
+		mostrarEntradas();
+	}
+
 }

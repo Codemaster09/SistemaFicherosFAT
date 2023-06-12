@@ -25,6 +25,7 @@ public class SistemaDeFicheros {
 	private static final int SIZE_OF_CLUSTER = 1024;
 	
 	public static final String newLine = "\n";
+	public static final String WINDOWS_FILE_SEPARATOR = "\\";
 	
 	// Metadatos del sistema de ficheros
 	EntradaFAT[] entradasSistemaDeFicheros;
@@ -82,7 +83,18 @@ public class SistemaDeFicheros {
 		// Mostrar datos
 		System.out.println(ConsoleColours.TEXT_BG_RED + "DATOS" + newLine + ConsoleColours.TEXT_RESET);
 		for(Cluster cluster: this.clustersSistemaDeFicheros) {
-			System.out.println(cluster + " " + Integer.toString(cluster.getID()));
+			
+			if(cluster instanceof Directorio) {
+				Directorio directorioImpreso = (Directorio) cluster;
+				directorioImpreso.mostrar();
+				
+			} else if(cluster instanceof ParteArchivo) {
+				ParteArchivo archivoImpreso = (ParteArchivo) cluster;
+				 System.out.println(archivoImpreso);
+			} else {
+				System.out.println(cluster);
+			}
+			
 		}
 	}
 	
@@ -138,16 +150,14 @@ public class SistemaDeFicheros {
 		int numClustersNecesitadosParaArchivo = 0;
 		numClustersNecesitadosParaArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		
-		// Obtener listas de entradas de la fat disponibles y ocupados
-		List<EntradaFAT> entradasFatOcupadas = obtenerListaEntradasFatOcupadas();
+		// Obtener listas de entradas de la fat disponibles 
 		List<EntradaFAT> entradasFatLibres = obtenerListaEntradasFatLibres(); 
 		
 		// Obtener nombres de directorios
 		String[] nombresDirectorios = obtenerNombresDeDirectorios();
 		
-		// Obtener clusters libres y ocupados
+		// Obtener clusters libres 
 		List<Cluster> clustersLibres = obtenerListaClustersLibres();
-		List<Cluster> clustersOcupados = obtenerListaClustersOcupados();
 		
 		// Obtener partes de archivo que necesitamos introducir en los clusters
 		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo);
@@ -330,6 +340,19 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	}
 	
 	public boolean crearDirectorio(String pathDirectorioOrigen, String nombreNuevoDirectorio) {
+		
+		String[] nombresDeDirectorios = obtenerNombresDeDirectorios();
+		
+		List<EntradaFAT> entradasFatLibres = obtenerListaEntradasFatLibres();
+		List<Cluster> clustersLibres = obtenerListaClustersLibres();
+		
+		if(obtenerNumeroEntradasFatLibres() >= 1) {
+			if(directorioExiste(pathDirectorioOrigen, nombresDeDirectorios)) {
+				clustersLibres.get(0).ocupar();
+				
+			}
+		}
+		
 		return false;
 	}
 	

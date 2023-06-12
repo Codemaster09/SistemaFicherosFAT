@@ -41,8 +41,8 @@ public class EntradaDir {
     }
     
     public void mostrar() {
-    	System.out.format("%15s %15s %15s\n", "Nombre", "Tipo", "Cluster Inicio");
-    	System.out.format("%15s %15s %15s\\n", this.nombreArchivo, this.getTipoEntrada(), this.clusterInicio);
+    	System.out.format("%-15s %-15s %-15s\n", "Nombre", "Tipo", "Cluster Inicio");
+    	System.out.format("%-15s %-15s %-15s\n", this.nombreArchivo, this.getTipoEntrada(), this.clusterInicio);
     }
     
 //    @Override
