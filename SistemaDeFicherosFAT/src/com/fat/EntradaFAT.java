@@ -5,7 +5,7 @@ public class EntradaFAT implements Comparable{
 	private boolean disponible;
 	private int siguienteEntrada;
 	private boolean esFinal;
-	private static int cont = 0; // El 0 es el directorio Raíz siempre
+	private static int cont = 1; // El 1 es el directorio Raíz siempre
 	
 	public EntradaFAT() {
 		super();
