@@ -121,7 +121,7 @@ public class SistemaDeFicheros {
 		System.out.println("Introduzca el nombre del nuevo archivo: ");
 		nombreArchivo = input.nextLine();
 		
-		System.out.println("Introduzcale tamaño en bytes del nuevo archivo: ");
+		System.out.println("Introduzca el tamaño en bytes del nuevo archivo: ");
 		sizeOfArchivo = input.nextInt();
 		
 		if(crearArchivo(nombreArchivo, sizeOfArchivo, pathDirectorioDestino)){
@@ -171,7 +171,7 @@ public class SistemaDeFicheros {
 		List<Cluster> clustersOcupados = obtenerListaClustersOcupados();
 		
 		// Obtener partes de archivo que necesitamos introducir en los clusters
-		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo, clustersLibres);
+		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo, pathDirectorioDestino, clustersLibres);
 		
 		// Case: espacio disponible y directorio existe
 		if(numClustersParaCrearArchivo <= this.obtenerNumeroEntradasFatLibres()) {
@@ -215,12 +215,14 @@ public class SistemaDeFicheros {
 	public void agregarPartesArchivoAClusters(List<ParteArchivo> partesDeArchivo, List<Cluster> clustersLibres) {
 		int numCluster = 0;
 		for(ParteArchivo archivo: partesDeArchivo) {
+			archivo.ocupar();
 			clustersLibres.set(numCluster, archivo);
 			numCluster++;
 		}
 	}
 	
 	public void agregarDirectorioAClusters(Directorio nuevoDirectorio, List<Cluster> clustersLibres) {
+		nuevoDirectorio.ocupar();
 		clustersLibres.set(0, nuevoDirectorio);
 	}
 	
@@ -342,10 +344,11 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		return clustersOcupados;
 	}
 	
-	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo, List<Cluster> clustersLibres) {
+	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo, String pathDirectorio, List<Cluster> clustersLibres) {
 		
 		int numeroDePartesDeArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		List<ParteArchivo> partesDeArchivos = new ArrayList<ParteArchivo>();
+		String pathArchivoCompleto = pathDirectorio + nombreDeArchivo +WINDOWS_FILE_SEPARATOR; 
 		
 		// Crear partes de archivo con su tamaño y nombre correspondientes
 		for(int numArchivo = 0; numArchivo < numeroDePartesDeArchivo; numArchivo++) {
@@ -353,9 +356,9 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			int idCluster = clustersLibres.get(numArchivo).getID();
 			if(numArchivo == numeroDePartesDeArchivo-1) {
 				int restoDeBytesArchivo = sizeOfArchivo % SIZE_OF_CLUSTER;
-				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, restoDeBytesArchivo, idCluster));
+				partesDeArchivos.add(new ParteArchivo(pathArchivoCompleto, restoDeBytesArchivo, idCluster));
 			} else {
-				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, SIZE_OF_CLUSTER, idCluster));
+				partesDeArchivos.add(new ParteArchivo(pathArchivoCompleto, SIZE_OF_CLUSTER, idCluster));
 			}
 		}
 		
@@ -381,7 +384,10 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 				
 				// Modificar datos
 				int idPrimerClusterLibre = clustersLibres.get(0).getID();
-				Directorio directorioNuevo = new Directorio(pathDirectorioOrigen + nombreNuevoDirectorio + WINDOWS_FILE_SEPARATOR, idPrimerClusterLibre);
+				String pathDestinoCompleto = pathDirectorioOrigen + nombreNuevoDirectorio + WINDOWS_FILE_SEPARATOR;
+				Directorio directorioOrigen = buscarDirectorio(pathDirectorioOrigen);
+				directorioOrigen.addEntrada(new EntradaDir(pathDestinoCompleto, false, idPrimerClusterLibre));
+				Directorio directorioNuevo = new Directorio(pathDestinoCompleto, idPrimerClusterLibre);
 				agregarDirectorioAClusters(directorioNuevo, clustersLibres);
 				actualizarDatos(clustersLibres, clustersOcupados);
 				return true;
@@ -716,20 +722,36 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		List<EntradaDir>entradasDirectorio=dirABuscar.getEntradas();
 		//Buscar entradas
 		for(EntradaDir ed:entradasDirectorio) {
-			if(ed.getIsDir()) {
+			if(!ed.esArchivo()) {
 				//Borramos el directorio contenido dentro del directorio padre
-				return borraDirectorio(pathDirectorioABorrar+"\\"+ed.getNombre());
+				borraDirectorio(ed.getNombre());
 			}else {
-				borrarArchivo(pathDirectorioABorrar+"\\"+ed.getNombre());
+				borrarArchivo(ed.getNombre());
 			}
 		}
-		//Borramos el directorio padre
+		
+		//Quitamos disponibilidad del directorio padre
 		int indexABorrar=dirABuscar.getID();
 		for(EntradaFAT e:entradasSistemaDeFicheros) {
+			// Cambiar disponibilidad
 			if(e.getID()==indexABorrar) {
 				e.disponibilidadATrue();
 			}
 		}
+		
+		// Eliminar directorio padre de los clusters
+		List<Directorio> listaDirectorios = obtenerListaDeDirectorios();
+		listaDirectorios.remove(dirABuscar);
+		Iterator<Directorio> itDirectorios = listaDirectorios.iterator();
+		Directorio[] arrayDirectorios = new Directorio[obtenerNumeroDeDirectorios()];
+		for(int numDirectorio = 0; numDirectorio < obtenerNumeroDeDirectorios() - 1; numDirectorio++) {
+			Directorio directorio = itDirectorios.next();
+			arrayDirectorios[numDirectorio] = directorio;
+		}
+		List<Cluster> listaClustersConDirectorios = Arrays.asList(arrayDirectorios);
+		List<Cluster> listaClustersSinDirectorios = obtenerListaDeClustersSinDirectorios();
+		listaClustersSinDirectorios.add(new Cluster(dirABuscar.getID()));
+		actualizarDatos(listaClustersConDirectorios, listaClustersSinDirectorios);
 		return true;
 		
 	}
@@ -741,7 +763,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		//Existe esa ruta al archivo
 		if(!archivoReal.isEmpty()) {		
 			//Nos quedamos los identificadores de los clusters para la ENTRADA FAT
-			List<Integer>idABorrar=new ArrayList<>();
+			List<Integer>idABorrar=new ArrayList<Integer>();
 			for(ParteArchivo pa: archivoReal) {
 				idABorrar.add(pa.getID());
 			}
@@ -754,11 +776,46 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 				}
 			}
 			
+			// Accedemos a los clusters y quitamos la referencia donde aparece
+			String[] pathsDeDirectorio = pathArchivoABorrar.split("\\\\");
+			String pathDirectorioOrigen = "";
+			for(int numPath = 0; numPath < pathsDeDirectorio.length; numPath++) {
+				if(numPath != pathsDeDirectorio.length-1) {
+					pathDirectorioOrigen += pathsDeDirectorio[numPath] + WINDOWS_FILE_SEPARATOR;
+				} 
+			}
+			
+			// Quitar referencia del directorio padre
+			Directorio directorioUsadoPorArchivo = buscarDirectorio(pathDirectorioOrigen);
+			List<EntradaDir> entradasDirectorioUsadoPorArchivo = directorioUsadoPorArchivo.getEntradas();
+			for(EntradaDir entrada: entradasDirectorioUsadoPorArchivo) {
+				if(entrada.getNombre().equals(pathArchivoABorrar)) {
+					directorioUsadoPorArchivo.removeEntrada(entrada);
+				}
+			}
+			directorioUsadoPorArchivo.setEntradas(entradasDirectorioUsadoPorArchivo);
+			
 			//Existe la ruta
 			return true;
 		}
 		
 		return false;
+	}
+	
+	public List<Cluster> obtenerListaDeClustersSinDirectorios(){
+		
+		List<Cluster> clustersSinDirectorios = new ArrayList<Cluster>();
+		
+		for(Cluster cluster: this.clustersSistemaDeFicheros) {
+			if(cluster instanceof ParteArchivo) {
+				ParteArchivo archivo = (ParteArchivo) cluster;
+				clustersSinDirectorios.add(archivo);
+			} else if (cluster instanceof Cluster) {
+				clustersSinDirectorios.add(cluster);
+			} 
+		}
+		
+		return clustersSinDirectorios;
 	}
 	
 //	public void borrarDirectorio(String nombre) {
@@ -785,7 +842,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		for(Cluster cluster: this.clustersSistemaDeFicheros) {
 			if(cluster instanceof ParteArchivo) {
 				ParteArchivo parteArchivo = (ParteArchivo) cluster;
-				if(parteArchivo.getNombre().equals(pathArchivo)) {
+				if(parteArchivo.getNombreArchivo().equals(pathArchivo)) {
 					partesArchivo.add(parteArchivo);
 				}
 			}

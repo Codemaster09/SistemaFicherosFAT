@@ -20,7 +20,7 @@ public class EntradaDir {
         this.nombreArchivo = nuevoNombreArchivo;
     }
 
-    public boolean getIsDir() {
+    public boolean esArchivo() {
         return esArchivo;
     }
 
