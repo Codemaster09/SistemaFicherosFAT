@@ -634,14 +634,36 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	 * Método usado para borrar un archivo dado su nombre
 	 * @param nombre path completo de dónde se encuentra el archivo
 	 */
-	public boolean borrarArchivo(String pathArchivoABorrar) {
-		
+	public boolean borraDirectorio(String pathDirectorioABorrar) {
+		Directorio dirABuscar=buscarDirectorio(pathDirectorioABorrar);
+		if(dirABuscar)
 		
 		return false;
 	}
-	
-	public boolean borraDirectorio(String pathDirectorioABorrar) {
+
+	public boolean borrarArchivo(String pathArchivoABorrar) {		
+		//Buscamos el archivo real en la zona de datos (con todos los clusters que ocupa)
+		List<ParteArchivo>archivoReal=buscarArchivo(pathArchivoABorrar);
 		
+		//Existe esa ruta al archivo
+		if(!archivoReal.isEmpty()) {		
+			//Nos quedamos los identificadores de los clusters para la ENTRADA FAT
+			List<Integer>idABorrar=new ArrayList<>();
+			for(ParteArchivo pa: archivoReal) {
+				idABorrar.add(pa.getID());
+			}
+			
+			//Accedemos a las ENTRADA FAT y modificamos la visibilidad
+			for(EntradaFAT e:entradasSistemaDeFicheros) {
+				if(idABorrar.contains(e.getID())) {
+					//Cambiamos la disponibilidad para que sea modificable
+					e.disponibilidadATrue();
+				}
+			}
+			
+			//Existe la ruta
+			return true;
+		}
 		
 		return false;
 	}
