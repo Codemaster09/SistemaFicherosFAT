@@ -656,17 +656,45 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	// MOVER ARCHIVO 
 	
 	public boolean moverArchivo(String pathArchivo, String pathDirectorioDestino) {
-		
-		return false;
+		return cambiarReferencia(pathArchivo, pathDirectorioDestino, true);
 	}
 	
 	// MOVER DIRECTORIO
 	
-	public boolean moverDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
-		
-		return false;
+	public boolean moverDirectorio(String pathDirectorioOrigen,String pathDirectorioDestino) {
+		return cambiarReferencia(pathDirectorioOrigen, pathDirectorioDestino, false);
 	}
 	
+	public boolean cambiarReferencia(String pathOrigen,String pathDestino,boolean archivo) {
+		Directorio dirPadre=obtenerPadre(pathOrigen);
+		if(dirPadre==null) {
+			//No existe esa ruta
+			return false;
+		}
+		for(EntradaDir e:dirPadre.getEntradas()) {
+			//Si las rutas de entrada coinciden es momento de cambiar su referencia
+			if(e.getNombre().equals(pathOrigen)) {
+				//Añadimos la referencia con una nueva entrada
+				Directorio dir=buscarDirectorio(pathDestino);
+				dir.addEntrada(new EntradaDir(e.getNombre(),archivo,e.getClusterInicio()));
+				
+				//Quitamos la referencia en el padre
+				dirPadre.removeEntrada(e);
+				return true;
+			}
+		}
+		return false;
+	}
+	public Directorio obtenerPadre(String pathHijo) {
+		String []contenido=pathHijo.split("\\\\");
+		String rutaPadre="";
+		for(int i=0;i<contenido.length;i++) {
+			if(i!=contenido.length-1) {
+				rutaPadre+=contenido[i];
+			}
+		}
+		return buscarDirectorio(rutaPadre);
+	}
 	
 	//XXX BORRAR
 	
