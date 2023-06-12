@@ -68,6 +68,13 @@ public class SistemaDeFicheros {
 	public void mostrarEstadoFat() {
 		
 		// Mostrar metadatos:
+		mostrarMetadatos();
+		
+		// Mostrar datos
+		mostrarDatos();
+	}
+	
+	public void mostrarMetadatos() {
 		System.out.println(ConsoleColours.TEXT_BG_BLUE + "METADATOS" + newLine + ConsoleColours.TEXT_RESET);
 		System.out.format("%-20s %-15s %-15s %-15s\n", 
 						  ConsoleColours.TEXT_CYAN + "Cluster", 
@@ -80,8 +87,9 @@ public class SistemaDeFicheros {
 			System.out.println();
 		}
 		System.out.println();
-		
-		// Mostrar datos
+	}
+	
+	public void mostrarDatos() {
 		System.out.println(ConsoleColours.TEXT_BG_RED + "DATOS" + newLine + ConsoleColours.TEXT_RESET);
 		for(Cluster cluster: this.clustersSistemaDeFicheros) {
 			System.out.println("[Cluster " + cluster.getID() + "]");
