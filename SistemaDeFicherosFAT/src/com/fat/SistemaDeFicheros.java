@@ -691,10 +691,30 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	 * @param nombre path completo de dónde se encuentra el archivo
 	 */
 	public boolean borraDirectorio(String pathDirectorioABorrar) {
-		Directorio dirABuscar=buscarDirectorio(pathDirectorioABorrar);
-		if(dirABuscar)
+		Directorio dirABuscar=buscarDirectorio(pathDirectorioABorrar);	
+		if(dirABuscar==null) {	
+			//No encontrado
+			return false;
+		}
+		List<EntradaDir>entradasDirectorio=dirABuscar.getEntradas();
+		//Buscar entradas
+		for(EntradaDir ed:entradasDirectorio) {
+			if(ed.getIsDir()) {
+				//Borramos el directorio contenido dentro del directorio padre
+				return borraDirectorio(pathDirectorioABorrar+"\\"+ed.getNombre());
+			}else {
+				borrarArchivo(pathDirectorioABorrar+"\\"+ed.getNombre());
+			}
+		}
+		//Borramos el directorio padre
+		int indexABorrar=dirABuscar.getID();
+		for(EntradaFAT e:entradasSistemaDeFicheros) {
+			if(e.getID()==indexABorrar) {
+				e.disponibilidadATrue();
+			}
+		}
+		return true;
 		
-		return false;
 	}
 
 	public boolean borrarArchivo(String pathArchivoABorrar) {		
