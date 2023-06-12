@@ -15,6 +15,9 @@ public class ParteArchivo extends Cluster {
         return nombreArchivo;
     }
 
+    public int getSizeInCluster() {
+    	return sizeInCluster;
+    }
     public void setNombreArchivo(String nuevoNombreArchivo) {
     	this.nombreArchivo = nuevoNombreArchivo;
     }
