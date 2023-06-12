@@ -2,7 +2,7 @@ package com.fat;
 
 import java.util.Arrays;
 
-public class Cluster {
+public class Cluster implements Comparable{
 	
 	private String nombre;
     static int size; // Se elige el tamaño de cada cluster
@@ -22,11 +22,11 @@ public class Cluster {
     }
     
     public void ocupar() {
-        disponible = true;
+        disponible = false;
     }
     
     public void liberar() {
-        disponible = false;
+        disponible = true;
     }
      
     public void changeSize(int newSize) {
@@ -52,6 +52,12 @@ public class Cluster {
 	@Override
 	public String toString() {
 		return "[Cluster " + idEntrada + "]" + SistemaDeFicheros.newLine;
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		Cluster c = (Cluster) o;
+		return this.idEntrada - c.idEntrada;
 	}
 
 }
