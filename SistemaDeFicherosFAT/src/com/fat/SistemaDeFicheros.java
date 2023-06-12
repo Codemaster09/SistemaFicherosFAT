@@ -522,6 +522,59 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	
 	public boolean copiarDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
 		
+		// Directorio de origen
+		Directorio directorioACopiar = buscarDirectorio(pathDirectorioOrigen);
+		if(directorioACopiar != null) {
+			// Obtenemos directorio Destino
+			Directorio directorioDestino = buscarDirectorio(pathDirectorioDestino);
+			
+			if(directorioDestino != null) {
+				// Gestionamos las entradas del directorio destino
+				for(EntradaDir entradaDir: directorioACopiar.getEntradas()) {
+					
+					if(entradaDir.esArchivo()) {
+						directorioDestino.addEntrada(entradaDir);
+						int numCluster = entradaDir.getClusterInicio();
+						int sizeOfArchivo=0;
+						for(EntradaFAT entradaFat: this.entradasSistemaDeFicheros) {
+							if(entradaFat.getID() == numCluster) {
+								ParteArchivo  cluster = (ParteArchivo) this.clustersSistemaDeFicheros[numCluster];
+								sizeOfArchivo += cluster.getSizeInCluster();
+								numCluster = entradaFat.getSiguienteEntrada();
+								if(entradaFat.getEsFinal()) {
+									//Tenemos archivo completo
+									//String pathFinalArchivo = pathDirectorioDestino + entradaDir.getNombre() + WINDOWS_FILE_SEPARATOR;
+									crearArchivo(entradaDir.getNombre(),sizeOfArchivo, pathDirectorioDestino);  
+								}
+							}
+	                    }
+					}
+					else {
+						// Obtener nombre del archivo/directorio a copiar
+						String nombreArchivo = obtenerNombreHijo(entradaDir.getNombre());
+						// Obtener path de donde se va a crear el archivo
+						String pathArchivoDestino = pathDirectorioDestino + nombreArchivo + WINDOWS_FILE_SEPARATOR;
+						
+						directorioDestino.addEntrada(new EntradaDir(pathArchivoDestino, false, BORRAR_ARCHIVO));
+						int numCluster = entradaDir.getClusterInicio();
+						int sizeOfArchivo=0;
+						for(EntradaFAT entradaFat: this.entradasSistemaDeFicheros) {
+							if(entradaFat.getID() == numCluster) {
+								ParteArchivo  cluster = (ParteArchivo) this.clustersSistemaDeFicheros[numCluster];
+								sizeOfArchivo += cluster.getSizeInCluster();
+								numCluster = entradaFat.getSiguienteEntrada();
+								if(entradaFat.getEsFinal()) {
+									//Tenemos directorio completo
+									crearDirectorio(pathDirectorioDestino, nombreArchivo);  
+								}
+							}
+	                    }
+					}
+				}	
+				return true;
+			}
+			return false;
+		}
 		return false;
 	}
 	
@@ -612,6 +665,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		}
 		return false;
 	}
+	
 	public Directorio obtenerDirectorioPadre(String pathHijo) {
 		String[] contenido=pathHijo.split("\\\\");
 		String rutaPadre="";
@@ -846,7 +900,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case COPIAR_DIRECTORIO:
-			//sistemaDeFicherosFat.mostrarDialogoParaCopiarDirectorio(input);
+			sistemaDeFicherosFat.mostrarDialogoParaCopiarDirectorio(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 		case MOVER_ARCHIVO:
 			sistemaDeFicherosFat.mostrarDialogoParaMoverArchivo(input);;
@@ -861,7 +915,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case BORRAR_DIRECTORIO:
-			sistemaDeFicherosFat.mostrarDialogoParaBorrarDirectorio(input);;
+			sistemaDeFicherosFat.mostrarDialogoParaBorrarDirectorio(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case SALIR_DE_PROGRAMA:
