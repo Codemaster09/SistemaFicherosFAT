@@ -8,12 +8,17 @@ public class Cluster implements Comparable{
     static int size; // Se elige el tamaño de cada cluster
     private boolean disponible;
     private int idEntrada;
-    private static int cont=0;
+    private static int cont=1;
     
     public Cluster() {
     	this.disponible = true;
         this.idEntrada = cont;
         cont++;
+    }
+    
+    public Cluster(int idEntrada) {
+    	this.disponible = true;
+    	this.idEntrada = idEntrada;
     }
     
     // Retornar y setear si está ocupado o no

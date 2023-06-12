@@ -5,9 +5,8 @@ public class ParteArchivo extends Cluster {
     private String nombreArchivo;
     private int sizeInCluster;
     
-    public ParteArchivo(String nombreArchivo, int sizeInCluster) {
-        super();
-        super.ocupar();
+    public ParteArchivo(String nombreArchivo, int sizeInCluster, int indexOfCluster) {
+        super(indexOfCluster);
         this.nombreArchivo = nombreArchivo;
         this.sizeInCluster = sizeInCluster;
     }
