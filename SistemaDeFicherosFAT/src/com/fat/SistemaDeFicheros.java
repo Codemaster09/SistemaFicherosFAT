@@ -497,19 +497,19 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
                    int numCluster=entradaDir.getClusterInicio();
                    int sizeOfArchivo=0;
                    for(EntradaFAT entradaFat: this.entradasSistemaDeFicheros) {
-                	   if(entradaFat.getID() == numCluster) {
+                	   if(entradaFat.getID() == numCluster) {    	  
                     	   Cluster c=this.clustersSistemaDeFicheros[numCluster];
                     	   if(c instanceof ParteArchivo) {
                     		   ParteArchivo parte=(ParteArchivo)c;
                     		   sizeOfArchivo+=parte.getSizeInCluster();
                     	   }
                     	   numCluster=entradaFat.getSiguienteEntrada();
+                    	   
+                      	  if(entradaFat.getEsFinal()) {
+                      		  //Tenemos archivo completo
+                              return crearArchivo(nombreArchivo,sizeOfArchivo,pathDirectorioDestino);  
+                          }
                       }
-               
-                	  if(entradaFat.getEsFinal()) {
-                		   //Tenemos archivo completo
-                           return crearArchivo(nombreArchivo,sizeOfArchivo,pathDirectorioDestino);  
-                	  }
                    }
                 }
             }
