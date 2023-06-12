@@ -381,7 +381,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 				
 				// Modificar datos
 				int idPrimerClusterLibre = clustersLibres.get(0).getID();
-				Directorio directorioNuevo = new Directorio(pathDirectorioOrigen + WINDOWS_FILE_SEPARATOR + nombreNuevoDirectorio, idPrimerClusterLibre);
+				Directorio directorioNuevo = new Directorio(pathDirectorioOrigen + nombreNuevoDirectorio + WINDOWS_FILE_SEPARATOR, idPrimerClusterLibre);
 				agregarDirectorioAClusters(directorioNuevo, clustersLibres);
 				actualizarDatos(clustersLibres, clustersOcupados);
 				return true;
