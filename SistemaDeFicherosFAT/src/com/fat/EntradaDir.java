@@ -27,6 +27,10 @@ public class EntradaDir {
     public void setIsArchivo() {
         this.esArchivo = true;
     }
+    
+    public void setIsDirectorio() {
+    	this.esArchivo = false;
+    }
 
     public int getClusterInicio() {
         return clusterInicio;

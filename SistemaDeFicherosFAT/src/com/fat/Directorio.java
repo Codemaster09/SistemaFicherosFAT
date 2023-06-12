@@ -8,8 +8,8 @@ public class Directorio extends Cluster{
 	
     private List<EntradaDir> entradas = new ArrayList<>();
 
-    public Directorio(String nombreDirectorio) {
-        super();
+    public Directorio(String nombreDirectorio, int indexOfCluster) {
+        super(indexOfCluster);
         super.setNombre(nombreDirectorio); 
     }
 
@@ -54,8 +54,7 @@ public class Directorio extends Cluster{
 	}
 	
 	public void mostrar() {
-		System.out.println(super.toString() + SistemaDeFicheros.newLine + 
-				super.getNombre() + SistemaDeFicheros.newLine);
+		System.out.println(super.getNombre() + SistemaDeFicheros.newLine);
 		mostrarEntradas();
 	}
 

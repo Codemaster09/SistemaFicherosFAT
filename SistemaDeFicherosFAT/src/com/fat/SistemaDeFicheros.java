@@ -46,7 +46,7 @@ public class SistemaDeFicheros {
 		this.clustersSistemaDeFicheros = new Cluster[numeroClusters + 1];
 		
 		//Inicializamos el directorio raíz
-		this.clustersSistemaDeFicheros[0] = new Directorio("C:\\"); //Directorio ROOT
+		this.clustersSistemaDeFicheros[0] = new Directorio("C:\\", 0); //Directorio ROOT
 		this.clustersSistemaDeFicheros[0].ocupar();
 		
 		// Inicializamos el resto de clusters
@@ -68,6 +68,13 @@ public class SistemaDeFicheros {
 	public void mostrarEstadoFat() {
 		
 		// Mostrar metadatos:
+		mostrarMetadatos();
+		
+		// Mostrar datos
+		mostrarDatos();
+	}
+	
+	public void mostrarMetadatos() {
 		System.out.println(ConsoleColours.TEXT_BG_BLUE + "METADATOS" + newLine + ConsoleColours.TEXT_RESET);
 		System.out.format("%-20s %-15s %-15s %-15s\n", 
 						  ConsoleColours.TEXT_CYAN + "Cluster", 
@@ -80,11 +87,12 @@ public class SistemaDeFicheros {
 			System.out.println();
 		}
 		System.out.println();
-		
-		// Mostrar datos
+	}
+	
+	public void mostrarDatos() {
 		System.out.println(ConsoleColours.TEXT_BG_RED + "DATOS" + newLine + ConsoleColours.TEXT_RESET);
 		for(Cluster cluster: this.clustersSistemaDeFicheros) {
-			
+			System.out.println("[Cluster " + cluster.getID() + "]");
 			if(cluster instanceof Directorio) {
 				Directorio directorioImpreso = (Directorio) cluster;
 				directorioImpreso.mostrar();
@@ -93,7 +101,7 @@ public class SistemaDeFicheros {
 				ParteArchivo archivoImpreso = (ParteArchivo) cluster;
 				 System.out.println(archivoImpreso);
 			} else {
-				System.out.println(cluster);
+				System.out.println();
 			}
 			
 		}
@@ -163,7 +171,7 @@ public class SistemaDeFicheros {
 		List<Cluster> clustersOcupados = obtenerListaClustersOcupados();
 		
 		// Obtener partes de archivo que necesitamos introducir en los clusters
-		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo);
+		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo, clustersLibres);
 		
 		// Case: espacio disponible y directorio existe
 		if(numClustersParaCrearArchivo <= this.obtenerNumeroEntradasFatLibres()) {
@@ -180,7 +188,7 @@ public class SistemaDeFicheros {
 				
 				// Añadir partes de archivo a los clusters y ocuparlos
 				agregarPartesArchivoAClusters(partesDeArchivoNuevas, clustersLibres);
-				
+				actualizarDatos(clustersLibres, clustersOcupados);
 				return true;
 			}
 		}
@@ -334,7 +342,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		return clustersOcupados;
 	}
 	
-	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo) {
+	public List<ParteArchivo> crearPartesDeArchivo(String nombreDeArchivo, int sizeOfArchivo, List<Cluster> clustersLibres) {
 		
 		int numeroDePartesDeArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		List<ParteArchivo> partesDeArchivos = new ArrayList<ParteArchivo>();
@@ -342,11 +350,12 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		// Crear partes de archivo con su tamaño y nombre correspondientes
 		for(int numArchivo = 0; numArchivo < numeroDePartesDeArchivo; numArchivo++) {
 			// Si es el último, establecer como tamaño el resto entre el tamaño de un cluster
+			int idCluster = clustersLibres.get(numArchivo).getID();
 			if(numArchivo == numeroDePartesDeArchivo-1) {
 				int restoDeBytesArchivo = sizeOfArchivo % SIZE_OF_CLUSTER;
-				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, restoDeBytesArchivo));
+				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, restoDeBytesArchivo, idCluster));
 			} else {
-				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, SIZE_OF_CLUSTER));
+				partesDeArchivos.add(new ParteArchivo(nombreDeArchivo, SIZE_OF_CLUSTER, idCluster));
 			}
 		}
 		
@@ -371,10 +380,10 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 				actualizarMetadatos(entradasFatLibres, entradasFatOcupadas);
 				
 				// Modificar datos
-				Directorio directorioNuevo = new Directorio(pathDirectorioOrigen + WINDOWS_FILE_SEPARATOR + nombreNuevoDirectorio);
+				int idPrimerClusterLibre = clustersLibres.get(0).getID();
+				Directorio directorioNuevo = new Directorio(pathDirectorioOrigen + nombreNuevoDirectorio + WINDOWS_FILE_SEPARATOR, idPrimerClusterLibre);
 				agregarDirectorioAClusters(directorioNuevo, clustersLibres);
 				actualizarDatos(clustersLibres, clustersOcupados);
-				
 				return true;
 			}
 		}
@@ -406,10 +415,18 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		Collections.sort(nuevosClusters);
 		
 		Iterator<Cluster> itClusters = nuevosClusters.iterator();
-		for(Cluster clusterAntiguo: this.clustersSistemaDeFicheros) {
-			Cluster clusterNuevo =  itClusters.next();
-			clusterAntiguo = clusterNuevo;
+		for(int numCluster = 0; numCluster < this.clustersSistemaDeFicheros.length; numCluster++) {
+			
+			Cluster clusterNuevo = itClusters.next();
+			if(clusterNuevo instanceof ParteArchivo) {
+				this.clustersSistemaDeFicheros[numCluster] = (ParteArchivo) clusterNuevo;
+			} else if(clusterNuevo instanceof Directorio) {
+				this.clustersSistemaDeFicheros[numCluster] = (Directorio) clusterNuevo;
+			} else {
+				this.clustersSistemaDeFicheros[numCluster] = clusterNuevo;
+			}
 		}
+		
 	}
 	
 //	//CREATE
