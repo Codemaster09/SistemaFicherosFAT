@@ -99,11 +99,10 @@ public class SistemaDeFicheros {
 				
 			} else if(cluster instanceof ParteArchivo) {
 				ParteArchivo archivoImpreso = (ParteArchivo) cluster;
-				 System.out.println(archivoImpreso);
+				System.out.println(archivoImpreso);
 			} else {
 				System.out.println();
 			}
-			
 		}
 	}
 	
