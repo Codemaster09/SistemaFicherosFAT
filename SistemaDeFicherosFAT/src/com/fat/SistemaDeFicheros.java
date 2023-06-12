@@ -384,11 +384,8 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 				actualizarMetadatos(entradasFatLibres, entradasFatOcupadas);
 				
 				// Modificar datos
-				int idPrimerClusterLibre = clustersLibres.get(0).getID();
-				String pathDestinoCompleto = pathDirectorioOrigen + nombreNuevoDirectorio + WINDOWS_FILE_SEPARATOR;
-				Directorio directorioOrigen = buscarDirectorio(pathDirectorioOrigen);
-				directorioOrigen.addEntrada(new EntradaDir(pathDestinoCompleto, false, idPrimerClusterLibre));
-				Directorio directorioNuevo = new Directorio(pathDestinoCompleto, idPrimerClusterLibre);
+				Directorio directorioNuevo = crearDirectorioEnCluster(clustersLibres, pathDirectorioOrigen, 
+																	  nombreNuevoDirectorio);
 				agregarDirectorioAClusters(directorioNuevo, clustersLibres);
 				actualizarDatos(clustersLibres, clustersOcupados);
 				return true;
@@ -396,6 +393,15 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		}
 		
 		return false;
+	}
+	
+	public Directorio crearDirectorioEnCluster(List<Cluster> clustersLibres, String pathDirectorioOrigen, String nombreNuevoDirectorio) {
+		int idPrimerClusterLibre = clustersLibres.get(0).getID();
+		String pathDestinoCompleto = pathDirectorioOrigen + nombreNuevoDirectorio + WINDOWS_FILE_SEPARATOR;
+		Directorio directorioOrigen = buscarDirectorio(pathDirectorioOrigen);
+		directorioOrigen.addEntrada(new EntradaDir(pathDestinoCompleto, false, idPrimerClusterLibre));
+		Directorio directorioNuevo = new Directorio(pathDestinoCompleto, idPrimerClusterLibre);
+		return directorioNuevo;
 	}
 	
 	public void actualizarMetadatos(List<EntradaFAT> entradasFatLibres, List<EntradaFAT> entradasFatOcupadas) {
@@ -510,6 +516,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
         }
         return false;
      }
+	
 	
 	// COPIAR DIRECTORIO
 	
