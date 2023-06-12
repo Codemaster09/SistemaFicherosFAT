@@ -2,6 +2,7 @@ package com.fat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
@@ -147,59 +148,72 @@ public class SistemaDeFicheros {
 	public boolean crearArchivo(String nombreArchivo, int sizeOfArchivo, String pathDirectorioDestino) {
 		
 		// Obtener número de clusters necesitados para guardar el archivo
-		int numClustersNecesitadosParaArchivo = 0;
-		numClustersNecesitadosParaArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
+		int numClustersParaCrearArchivo = 0;
+		numClustersParaCrearArchivo = obtenerNumeroDePartesDeArchivo(sizeOfArchivo);
 		
 		// Obtener listas de entradas de la fat disponibles 
 		List<EntradaFAT> entradasFatLibres = obtenerListaEntradasFatLibres(); 
+		List<EntradaFAT> entradasFatOcupadas = obtenerListaEntradasFatOcupadas();
 		
 		// Obtener nombres de directorios
 		String[] nombresDirectorios = obtenerNombresDeDirectorios();
 		
 		// Obtener clusters libres 
 		List<Cluster> clustersLibres = obtenerListaClustersLibres();
+		List<Cluster> clustersOcupados = obtenerListaClustersOcupados();
 		
 		// Obtener partes de archivo que necesitamos introducir en los clusters
 		List<ParteArchivo> partesDeArchivoNuevas = crearPartesDeArchivo(nombreArchivo, sizeOfArchivo);
 		
 		// Case: espacio disponible y directorio existe
-		if(numClustersNecesitadosParaArchivo <= this.obtenerNumeroEntradasFatLibres()) {
+		if(numClustersParaCrearArchivo <= this.obtenerNumeroEntradasFatLibres()) {
 			if(directorioExiste(pathDirectorioDestino, nombresDirectorios)) {
 				
 				// Modificar entradas FAT (METADATOS)
-				for(int entrada = 0; entrada < numClustersNecesitadosParaArchivo; entrada++) {
-					// Cambiar a si es final
-					if(entrada == numClustersNecesitadosParaArchivo - 1) {
-						// Cambiar disponibilidad e indicar que es final
-						entradasFatLibres.get(entrada).disponibilidadAFalse();
-						entradasFatLibres.get(entrada).cambiarSiEsFinal(true);
-					} else {
-						// Cambiar disponiblidad e indicar siguiente cluster
-						entradasFatLibres.get(entrada).disponibilidadAFalse();
-						entradasFatLibres.get(entrada).cambiarSiguienteCluster(entradasFatLibres.get(entrada+1).getID());
-					}
-				}
-				
+				modificarEntradasFat(entradasFatLibres, numClustersParaCrearArchivo);
+				actualizarMetadatos(entradasFatLibres, entradasFatOcupadas);
 				// Modificar clusters (DATOS)
 				
 				// Añadir archivo a las entradas dir
 				Directorio directorioParaArchivo = buscarDirectorio(pathDirectorioDestino);
-				directorioParaArchivo.addEntrada(new EntradaDir(nombreArchivo, false, clustersLibres.get(0).getID()));
+				directorioParaArchivo.addEntrada(new EntradaDir(nombreArchivo, true, clustersLibres.get(0).getID()));
 				
-				// Añadir partes de archivo a los clusters
-				
-				Iterator<Cluster> itClusters = clustersLibres.iterator();
-				
-				for(ParteArchivo archivo: partesDeArchivoNuevas) {
-					Cluster clusterUsado = itClusters.next();
-					clusterUsado = archivo;
-				}
+				// Añadir partes de archivo a los clusters y ocuparlos
+				agregarPartesArchivoAClusters(partesDeArchivoNuevas, clustersLibres);
 				
 				return true;
 			}
 		}
 		// Case: archivo demasiado grande o directorio no existe 
 		return false;
+	}
+	
+	public void modificarEntradasFat(List<EntradaFAT> entradasFatLibres, int numClustersParaCrearArchivo) {
+		
+		for(int entrada = 0; entrada < numClustersParaCrearArchivo; entrada++) {
+			// Cambiar a si es final
+			if(entrada == numClustersParaCrearArchivo - 1) {
+				// Cambiar disponibilidad e indicar que es final
+				entradasFatLibres.get(entrada).disponibilidadAFalse();
+				entradasFatLibres.get(entrada).cambiarSiEsFinal(true);
+			} else {
+				// Cambiar disponiblidad e indicar siguiente cluster
+				entradasFatLibres.get(entrada).disponibilidadAFalse();
+				entradasFatLibres.get(entrada).cambiarSiguienteCluster(entradasFatLibres.get(entrada+1).getID());
+			}
+		}
+	}
+	
+	public void agregarPartesArchivoAClusters(List<ParteArchivo> partesDeArchivo, List<Cluster> clustersLibres) {
+		int numCluster = 0;
+		for(ParteArchivo archivo: partesDeArchivo) {
+			clustersLibres.set(numCluster, archivo);
+			numCluster++;
+		}
+	}
+	
+	public void agregarDirectorioAClusters(Directorio nuevoDirectorio, List<Cluster> clustersLibres) {
+		clustersLibres.set(0, nuevoDirectorio);
 	}
 	
 	public int obtenerNumeroEntradasFatLibres() {
@@ -344,16 +358,58 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		String[] nombresDeDirectorios = obtenerNombresDeDirectorios();
 		
 		List<EntradaFAT> entradasFatLibres = obtenerListaEntradasFatLibres();
+		List<EntradaFAT> entradasFatOcupadas = obtenerListaEntradasFatOcupadas();
+		
 		List<Cluster> clustersLibres = obtenerListaClustersLibres();
+		List<Cluster> clustersOcupados = obtenerListaClustersOcupados();
 		
 		if(obtenerNumeroEntradasFatLibres() >= 1) {
 			if(directorioExiste(pathDirectorioOrigen, nombresDeDirectorios)) {
-				clustersLibres.get(0).ocupar();
 				
+				// Modificar metadatos
+				modificarEntradasFat(entradasFatLibres, 1);
+				actualizarMetadatos(entradasFatLibres, entradasFatOcupadas);
+				
+				// Modificar datos
+				Directorio directorioNuevo = new Directorio(pathDirectorioOrigen + WINDOWS_FILE_SEPARATOR + nombreNuevoDirectorio);
+				agregarDirectorioAClusters(directorioNuevo, clustersLibres);
+				actualizarDatos(clustersLibres, clustersOcupados);
+				
+				return true;
 			}
 		}
 		
 		return false;
+	}
+	
+	public void actualizarMetadatos(List<EntradaFAT> entradasFatLibres, List<EntradaFAT> entradasFatOcupadas) {
+		
+		List<EntradaFAT> nuevasEntradasFat = new ArrayList<EntradaFAT>();
+		nuevasEntradasFat.addAll(entradasFatOcupadas);
+		nuevasEntradasFat.addAll(entradasFatLibres);
+		
+		Collections.sort(nuevasEntradasFat);
+		
+		Iterator<EntradaFAT> itEntradas = nuevasEntradasFat.iterator();
+		for(EntradaFAT entradaAntigua: this.entradasSistemaDeFicheros) {
+			EntradaFAT entradaNueva = itEntradas.next();
+			entradaAntigua = entradaNueva; 
+		}
+	}
+	
+	public void actualizarDatos(List<Cluster> clustersLibres, List<Cluster> clustersOcupados) {
+		
+		List<Cluster> nuevosClusters = new ArrayList<Cluster>();
+		nuevosClusters.addAll(clustersLibres);
+		nuevosClusters.addAll(clustersOcupados);
+		
+		Collections.sort(nuevosClusters);
+		
+		Iterator<Cluster> itClusters = nuevosClusters.iterator();
+		for(Cluster clusterAntiguo: this.clustersSistemaDeFicheros) {
+			Cluster clusterNuevo =  itClusters.next();
+			clusterAntiguo = clusterNuevo;
+		}
 	}
 	
 //	//CREATE
@@ -504,26 +560,26 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		
 	}
 	
-	public void mostrarDialogoParaCopiarDirectorio(Scanner input) {
-		
-		String pathDirectorioACopiar = null;
-		String pathDirectorioDestino = null;
-		
-		System.out.println("Introduzca el path completo del directorio a copiar: ");
-		pathDirectorioACopiar = input.nextLine();
-		
-		System.out.println("Introduzca el path completo del directorio donde quiere guardar la copia: ");
-		pathDirectorioDestino = input.nextLine();
-		
-		// Case: directorio copiado con éxito 
-		if(copiarDirectorio(pathDirectorioACopiar, pathDirectorioDestino)) {
-			System.out.println("¡Directorio copiado con éxito!");
-		}
-		// Case: direcorio origen o destino no encontrados
-		else {
-			System.err.println("Directorio origen o destino no encontrados.");
-		}
-	}
+//	public void mostrarDialogoParaCopiarDirectorio(Scanner input) {
+//		
+//		String pathDirectorioACopiar = null;
+//		String pathDirectorioDestino = null;
+//		
+//		System.out.println("Introduzca el path completo del directorio a copiar: ");
+//		pathDirectorioACopiar = input.nextLine();
+//		
+//		System.out.println("Introduzca el path completo del directorio donde quiere guardar la copia: ");
+//		pathDirectorioDestino = input.nextLine();
+//		
+//		// Case: directorio copiado con éxito 
+//		if(copiarDirectorio(pathDirectorioACopiar, pathDirectorioDestino)) {
+//			System.out.println("¡Directorio copiado con éxito!");
+//		}
+//		// Case: direcorio origen o destino no encontrados
+//		else {
+//			System.err.println("Directorio origen o destino no encontrados.");
+//		}
+//	}
 	
 	// COPIAR ARCHIVO
 	public boolean copiarArchivo(String pathArchivo, String pathDirectorioDestino) {
@@ -533,10 +589,10 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	
 	// COPIAR DIRECTORIO
 	
-	public boolean copiarDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
-		
-		return false;
-	}
+//	public boolean copiarDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
+//		
+//		return false;
+//	}
 	
 	//XXX MOVER
 	public void mostrarDialogoParaMoverArchivo(Scanner input) {
@@ -761,7 +817,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			crearYMostrarConsola(sistemaDeFicherosFat);
 			break;
 		case COPIAR_DIRECTORIO:
-			sistemaDeFicherosFat.mostrarDialogoParaCopiarDirectorio(input);
+			//sistemaDeFicherosFat.mostrarDialogoParaCopiarDirectorio(input);
 			crearYMostrarConsola(sistemaDeFicherosFat);
 		case MOVER_ARCHIVO:
 			sistemaDeFicherosFat.mostrarDialogoParaMoverArchivo(input);;

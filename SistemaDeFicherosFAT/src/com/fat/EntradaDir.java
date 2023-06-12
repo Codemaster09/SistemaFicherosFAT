@@ -5,9 +5,9 @@ public class EntradaDir {
     private boolean esArchivo;
     private int clusterInicio;
 
-    public EntradaDir(String nombreArchivo, boolean esDirectorio, int clusterInicio) {
+    public EntradaDir(String nombreArchivo, boolean esArchivo, int clusterInicio) {
         this.nombreArchivo = nombreArchivo; 
-        this.esArchivo = esDirectorio;
+        this.esArchivo = esArchivo;
         this.clusterInicio = clusterInicio;
     }
 
@@ -24,8 +24,8 @@ public class EntradaDir {
         return esArchivo;
     }
 
-    public void setIsDir(boolean esDirectorio) {
-        this.esArchivo = esDirectorio;
+    public void setIsArchivo() {
+        this.esArchivo = true;
     }
 
     public int getClusterInicio() {
