@@ -207,6 +207,7 @@ public class SistemaDeFicheros {
 			} else {
 				// Cambiar disponiblidad e indicar siguiente cluster
 				entradasFatLibres.get(entrada).disponibilidadAFalse();
+				entradasFatLibres.get(entrada).cambiarSiEsFinal(false);
 				entradasFatLibres.get(entrada).cambiarSiguienteCluster(entradasFatLibres.get(entrada+1).getID());
 			}
 		}
@@ -583,26 +584,26 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		
 	}
 	
-//	public void mostrarDialogoParaCopiarDirectorio(Scanner input) {
-//		
-//		String pathDirectorioACopiar = null;
-//		String pathDirectorioDestino = null;
-//		
-//		System.out.println("Introduzca el path completo del directorio a copiar: ");
-//		pathDirectorioACopiar = input.nextLine();
-//		
-//		System.out.println("Introduzca el path completo del directorio donde quiere guardar la copia: ");
-//		pathDirectorioDestino = input.nextLine();
-//		
-//		// Case: directorio copiado con éxito 
-//		if(copiarDirectorio(pathDirectorioACopiar, pathDirectorioDestino)) {
-//			System.out.println("¡Directorio copiado con éxito!");
-//		}
-//		// Case: direcorio origen o destino no encontrados
-//		else {
-//			System.err.println("Directorio origen o destino no encontrados.");
-//		}
-//	}
+	public void mostrarDialogoParaCopiarDirectorio(Scanner input) {
+		
+		String pathDirectorioACopiar = null;
+		String pathDirectorioDestino = null;
+		
+		System.out.println("Introduzca el path completo del directorio a copiar: ");
+		pathDirectorioACopiar = input.nextLine();
+		
+		System.out.println("Introduzca el path completo del directorio donde quiere guardar la copia: ");
+		pathDirectorioDestino = input.nextLine();
+		
+		// Case: directorio copiado con éxito 
+		if(copiarDirectorio(pathDirectorioACopiar, pathDirectorioDestino)) {
+			System.out.println("¡Directorio copiado con éxito!");
+		}
+		// Case: direcorio origen o destino no encontrados
+		else {
+			System.err.println("Directorio origen o destino no encontrados.");
+		}
+	}
 	
 	// COPIAR ARCHIVO
 	public boolean copiarArchivo(String pathArchivo, String pathDirectorioDestino) {
@@ -612,10 +613,10 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	
 	// COPIAR DIRECTORIO
 	
-//	public boolean copiarDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
-//		
-//		return false;
-//	}
+	public boolean copiarDirectorio(String pathDirectorioOrigen, String pathDirectorioDestino) {
+		
+		return false;
+	}
 	
 	//XXX MOVER
 	public void mostrarDialogoParaMoverArchivo(Scanner input) {
@@ -671,35 +672,84 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		return cambiarReferencia(pathDirectorioOrigen, pathDirectorioDestino, false);
 	}
 	
-	public boolean cambiarReferencia(String pathOrigen,String pathDestino,boolean archivo) {
-		Directorio dirPadre=obtenerPadre(pathOrigen);
+	public boolean cambiarReferencia(String pathOrigen,String pathDestino,boolean esArchivo) {
+		Directorio dirPadre = obtenerDirectorioPadre(pathOrigen);
+		String nombreArchivo = obtenerNombreHijo(pathOrigen);
 		if(dirPadre==null) {
 			//No existe esa ruta
 			return false;
 		}
 		for(EntradaDir e:dirPadre.getEntradas()) {
 			//Si las rutas de entrada coinciden es momento de cambiar su referencia
-			if(e.getNombre().equals(pathOrigen)) {
-				//Añadimos la referencia con una nueva entrada
-				Directorio dir=buscarDirectorio(pathDestino);
-				dir.addEntrada(new EntradaDir(e.getNombre(),archivo,e.getClusterInicio()));
-				
-				//Quitamos la referencia en el padre
-				dirPadre.removeEntrada(e);
-				return true;
+			if(esArchivo) {
+				if(e.getNombre().equals(nombreArchivo)) {
+					//Añadimos la referencia con una nueva entrada
+					Directorio dirDestino = buscarDirectorio(pathDestino);
+					dirDestino.addEntrada(new EntradaDir(e.getNombre(),esArchivo,e.getClusterInicio()));
+					
+					//Quitamos la referencia en el padre
+					dirPadre.removeEntrada(e);
+					return true;
+				}
+			} else {
+				if(e.getNombre().equals(pathOrigen)) {
+					//Añadimos la referencia con una nueva entrada
+					Directorio dirDestino = buscarDirectorio(pathDestino);
+					dirDestino.addEntrada(new EntradaDir(e.getNombre(),esArchivo,e.getClusterInicio()));
+					
+					//Quitamos la referencia en el padre
+					dirPadre.removeEntrada(e);
+					return true;
+				}
 			}
+			
+			//return moverDeOrigenADestino(e, dirPadre, nombreArchivo, pathDestino, e.esArchivo());
 		}
 		return false;
 	}
-	public Directorio obtenerPadre(String pathHijo) {
-		String []contenido=pathHijo.split("\\\\");
+	public Directorio obtenerDirectorioPadre(String pathHijo) {
+		String[] contenido=pathHijo.split("\\\\");
 		String rutaPadre="";
-		for(int i=0;i<contenido.length;i++) {
-			if(i!=contenido.length-1) {
-				rutaPadre+=contenido[i];
+		for(int numPath=0;numPath<contenido.length;numPath++) {
+			if(numPath!=contenido.length-1) {
+				rutaPadre+=contenido[numPath] + WINDOWS_FILE_SEPARATOR;
 			}
 		}
 		return buscarDirectorio(rutaPadre);
+	}
+	
+	public String obtenerNombreHijo(String pathArchivo) {
+		String[] contenido = pathArchivo.split("\\\\");
+		String nombreHijo = "";
+		nombreHijo = contenido[contenido.length-1];
+		return nombreHijo;
+	}
+	
+	public boolean moverDeOrigenADestino(EntradaDir entradaDir, Directorio dirPadre, String nombreArchivo, 
+									  String pathDestino, boolean esArchivo) {
+		if(esArchivo) {
+			if(entradaDir.getNombre().equals(nombreArchivo)) {
+				//Añadimos la referencia con una nueva entrada
+				Directorio dirDestino = buscarDirectorio(pathDestino);
+				dirDestino.addEntrada(new EntradaDir(entradaDir.getNombre(),esArchivo,entradaDir.getClusterInicio()));
+				
+				//Quitamos la referencia en el padre
+				dirPadre.removeEntrada(entradaDir);
+				return true;
+			}
+		} else {
+			if(entradaDir.getNombre().equals(dirPadre.getNombre())) {
+				//Añadimos la referencia con una nueva entrada
+				Directorio dirDestino = buscarDirectorio(pathDestino);
+				dirDestino.addEntrada(new EntradaDir(entradaDir.getNombre(),esArchivo,entradaDir.getClusterInicio()));
+				
+				//Quitamos la referencia en el padre
+				dirPadre.removeEntrada(entradaDir);
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	//XXX BORRAR
@@ -749,12 +799,12 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		}
 		List<EntradaDir>entradasDirectorio=dirABuscar.getEntradas();
 		//Buscar entradas
-		for(EntradaDir ed:entradasDirectorio) {
-			if(!ed.esArchivo()) {
-				//Borramos el directorio contenido dentro del directorio padre
-				borraDirectorio(ed.getNombre());
-			}else {
-				borrarArchivo(ed.getNombre());
+		for(int numEntrada = 0; numEntrada < entradasDirectorio.size(); numEntrada++) {
+			EntradaDir entrada = entradasDirectorio.get(numEntrada);
+			if(!entrada.esArchivo()) {
+				borraDirectorio(entrada.getNombre());
+			} else {
+				borrarArchivo(pathDirectorioABorrar + entrada.getNombre() + WINDOWS_FILE_SEPARATOR);
 			}
 		}
 		
@@ -764,22 +814,13 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			// Cambiar disponibilidad
 			if(e.getID()==indexABorrar) {
 				e.disponibilidadATrue();
+				break;
 			}
 		}
 		
-		// Eliminar directorio padre de los clusters
-		List<Directorio> listaDirectorios = obtenerListaDeDirectorios();
-		listaDirectorios.remove(dirABuscar);
-		Iterator<Directorio> itDirectorios = listaDirectorios.iterator();
-		Directorio[] arrayDirectorios = new Directorio[obtenerNumeroDeDirectorios()];
-		for(int numDirectorio = 0; numDirectorio < obtenerNumeroDeDirectorios() - 1; numDirectorio++) {
-			Directorio directorio = itDirectorios.next();
-			arrayDirectorios[numDirectorio] = directorio;
-		}
-		List<Cluster> listaClustersConDirectorios = Arrays.asList(arrayDirectorios);
-		List<Cluster> listaClustersSinDirectorios = obtenerListaDeClustersSinDirectorios();
-		listaClustersSinDirectorios.add(new Cluster(dirABuscar.getID()));
-		actualizarDatos(listaClustersConDirectorios, listaClustersSinDirectorios);
+		// Liberar directorio padre de los clusters
+		dirABuscar.liberar();
+		
 		return true;
 		
 	}
@@ -793,6 +834,7 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			//Nos quedamos los identificadores de los clusters para la ENTRADA FAT
 			List<Integer>idABorrar=new ArrayList<Integer>();
 			for(ParteArchivo pa: archivoReal) {
+				pa.liberar();
 				idABorrar.add(pa.getID());
 			}
 			
@@ -805,45 +847,24 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 			}
 			
 			// Accedemos a los clusters y quitamos la referencia donde aparece
-			String[] pathsDeDirectorio = pathArchivoABorrar.split("\\\\");
-			String pathDirectorioOrigen = "";
-			for(int numPath = 0; numPath < pathsDeDirectorio.length; numPath++) {
-				if(numPath != pathsDeDirectorio.length-1) {
-					pathDirectorioOrigen += pathsDeDirectorio[numPath] + WINDOWS_FILE_SEPARATOR;
-				} 
-			}
 			
 			// Quitar referencia del directorio padre
-			Directorio directorioUsadoPorArchivo = buscarDirectorio(pathDirectorioOrigen);
+			Directorio directorioUsadoPorArchivo = obtenerDirectorioPadre(pathArchivoABorrar); 
+			String nombreHijo = obtenerNombreHijo(pathArchivoABorrar);
 			List<EntradaDir> entradasDirectorioUsadoPorArchivo = directorioUsadoPorArchivo.getEntradas();
-			for(EntradaDir entrada: entradasDirectorioUsadoPorArchivo) {
-				if(entrada.getNombre().equals(pathArchivoABorrar)) {
+			
+			for(int numEntrada = 0; numEntrada < entradasDirectorioUsadoPorArchivo.size(); numEntrada++) {
+				EntradaDir entrada = entradasDirectorioUsadoPorArchivo.get(numEntrada);
+				if(entrada.getNombre().equals(nombreHijo)) {
 					directorioUsadoPorArchivo.removeEntrada(entrada);
 				}
 			}
 			directorioUsadoPorArchivo.setEntradas(entradasDirectorioUsadoPorArchivo);
-			
 			//Existe la ruta
 			return true;
 		}
 		
 		return false;
-	}
-	
-	public List<Cluster> obtenerListaDeClustersSinDirectorios(){
-		
-		List<Cluster> clustersSinDirectorios = new ArrayList<Cluster>();
-		
-		for(Cluster cluster: this.clustersSistemaDeFicheros) {
-			if(cluster instanceof ParteArchivo) {
-				ParteArchivo archivo = (ParteArchivo) cluster;
-				clustersSinDirectorios.add(archivo);
-			} else if (cluster instanceof Cluster) {
-				clustersSinDirectorios.add(cluster);
-			} 
-		}
-		
-		return clustersSinDirectorios;
 	}
 	
 //	public void borrarDirectorio(String nombre) {
