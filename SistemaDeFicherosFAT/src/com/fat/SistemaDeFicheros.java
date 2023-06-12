@@ -578,8 +578,6 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 					return true;
 				}
 			}
-			
-			//return moverDeOrigenADestino(e, dirPadre, nombreArchivo, pathDestino, e.esArchivo());
 		}
 		return false;
 	}
@@ -599,33 +597,6 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		String nombreHijo = "";
 		nombreHijo = contenido[contenido.length-1];
 		return nombreHijo;
-	}
-	
-	public boolean moverDeOrigenADestino(EntradaDir entradaDir, Directorio dirPadre, String nombreArchivo, 
-									  String pathDestino, boolean esArchivo) {
-		if(esArchivo) {
-			if(entradaDir.getNombre().equals(nombreArchivo)) {
-				//Añadimos la referencia con una nueva entrada
-				Directorio dirDestino = buscarDirectorio(pathDestino);
-				dirDestino.addEntrada(new EntradaDir(entradaDir.getNombre(),esArchivo,entradaDir.getClusterInicio()));
-				
-				//Quitamos la referencia en el padre
-				dirPadre.removeEntrada(entradaDir);
-				return true;
-			}
-		} else {
-			if(entradaDir.getNombre().equals(dirPadre.getNombre())) {
-				//Añadimos la referencia con una nueva entrada
-				Directorio dirDestino = buscarDirectorio(pathDestino);
-				dirDestino.addEntrada(new EntradaDir(entradaDir.getNombre(),esArchivo,entradaDir.getClusterInicio()));
-				
-				//Quitamos la referencia en el padre
-				dirPadre.removeEntrada(entradaDir);
-				return true;
-			}
-		}
-		
-		return false;
 	}
 	
 	//XXX BORRAR
@@ -893,5 +864,4 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 		crearYMostrarConsola(sistemaDeFicheros);
 		//realizarPruebas(sistemaDeFicheros);
 	}
-	
 }
