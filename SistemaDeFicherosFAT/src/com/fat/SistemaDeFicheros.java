@@ -482,10 +482,34 @@ public List<EntradaFAT> obtenerListaEntradasFatOcupadas() {
 	}
 	
 	// COPIAR ARCHIVO
-	public boolean copiarArchivo(String pathArchivo, String pathDirectorioDestino) {
-		
-		return false;
-	}
+    public boolean copiarArchivo(String pathArchivo, String pathDirectorioDestino) {
+        Directorio directorioDeArchivoACopiar = obtenerDirectorioPadre(pathArchivo);
+        if(directorioDeArchivoACopiar != null) {
+            String nombreArchivo = obtenerNombreHijo(pathArchivo);
+            for(EntradaDir entradaDir: directorioDeArchivoACopiar.getEntradas()) {
+                if(entradaDir.getNombre().equals(nombreArchivo)) {
+                   int numCluster=entradaDir.getClusterInicio();
+                   int sizeOfArchivo=0;
+                   for(EntradaFAT entradaFat: this.entradasSistemaDeFicheros) {
+                	   if(entradaFat.getID() == numCluster) {
+                    	   Cluster c=this.clustersSistemaDeFicheros[numCluster];
+                    	   if(c instanceof ParteArchivo) {
+                    		   ParteArchivo parte=(ParteArchivo)c;
+                    		   sizeOfArchivo+=parte.getSizeInCluster();
+                    	   }
+                    	   numCluster=entradaFat.getSiguienteEntrada();
+                      }
+               
+                	  if(entradaFat.getEsFinal()) {
+                		   //Tenemos archivo completo
+                           return crearArchivo(nombreArchivo,sizeOfArchivo,pathDirectorioDestino);  
+                	  }
+                   }
+                }
+            }
+        }
+        return false;
+     }
 	
 	// COPIAR DIRECTORIO
 	
